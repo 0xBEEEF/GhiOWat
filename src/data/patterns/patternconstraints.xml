@@ -1,0 +1,7 @@
+<patternconstraints>
+  <language id="x86:*:32:*">
+    <compiler id="openwatcomcpp">
+      <patternfile>x86openwatcomcpp_patterns.xml</patternfile>
+    </compiler>
+  </language>
+</patternconstraints>

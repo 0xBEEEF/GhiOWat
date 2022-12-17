@@ -1,0 +1,4855 @@
+From: <Saved by Blink>
+Snapshot-Content-Location: http://jdebp.info/FGA/function-calling-conventions.html
+Subject: FGA: The gen on function calling conventions.
+Date: Sat, 17 Dec 2022 13:59:44 -0000
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----MultipartBoundary--YIaMFhaOPWLGseTcODTKNn8P6RzIkp2Tznw48mtWwM----"
+
+
+------MultipartBoundary--YIaMFhaOPWLGseTcODTKNn8P6RzIkp2Tznw48mtWwM----
+Content-Type: text/html
+Content-ID: <frame-F819754EA8BA3301F17DB9AD6450FBE0@mhtml.blink>
+Content-Transfer-Encoding: quoted-printable
+Content-Location: http://jdebp.info/FGA/function-calling-conventions.html
+
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html; charset=
+=3Dwindows-1252"><link rel=3D"Home" href=3D"http://jdebp.info/" title=3D"Jd=
+eBP's WWW site">
+<link rel=3D"Top" href=3D"http://jdebp.info/FGA/" title=3D"FGAs">
+<link rel=3D"Up" href=3D"http://jdebp.info/FGA/#GeneralProgramming" title=
+=3D"General programming">
+<link rel=3D"Prev" href=3D"http://jdebp.info/FGA/detecting-x86-virtual-mach=
+ines.html" title=3D"How one detects x86 virtual machines.">
+<link rel=3D"Next" href=3D"http://jdebp.info/FGA/function-naming-convention=
+s.html" title=3D"The gen on function naming conventions.">
+<link rel=3D"alternate" href=3D"http://jdebp.info./FGA/function-calling-con=
+ventions.html" title=3D"NTLWorld">
+<link rel=3D"Stylesheet" type=3D"text/css" href=3D"http://jdebp.info/FGA/fg=
+a.css" title=3D"Frequently Given Answers default style">
+<link rel=3D"Icon" href=3D"http://jdebp.info/FGA/favicon.png" type=3D"image=
+/png">
+<meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=3D1.=
+0">
+<title>FGA: The gen on function calling conventions.</title>
+</head><body><h1 class=3D"ruled">The gen on function calling conventions.</=
+h1>
+<div class=3D"infobox">
+<p>
+If you want to see the list of sections in this document, to more easily
+navigate to a specific section,
+<a href=3D"http://jdebp.info/FGA/web-enable-browser-link-bar.html">
+enable the navigation bar support in your WWW browser</a>.
+</p>
+</div>
+
+<p>
+In machine code, a function is called with a <code>JSR</code> or
+<code>CALL</code> instruction of some kind, and the function returns to
+its caller with a <code>RTS</code> or <code>RET</code> instruction of some
+kind.  If one is writing assembly language, these menmonics are what one
+writes.  But when one writes a function call with a (compiled) high-level
+language such as C, C++, Pascal, Modula, Fortran, and so forth, this is
+insufficient.  In high level languages, functions have <em>parameters</em>
+and <em>return values</em>.  Even in assembly language, programmers need
+to know, for example, what processor registers a function needs, and is
+liable to have modified upon return to the caller.  (Macro assemblers,
+such as Borland's Turbo Assembler, provide high-level-language-like
+directives such as <code>ARG</code> for dealing in function parameters
+much like a high-level language.)
+</p>
+
+<p>
+A <em><dfn>function calling convention</dfn></em> is a convention that
+specifies how the parameters are passed to the function when it is called,
+how the return value is returned to the caller, and what the processor
+register state is expected to be upon entry to and exit from the function.
+It is an interface contract between function callers and the called
+function.
+</p>
+
+<p>
+The interface contract encompasses several aspects:
+</p>
+<ul>
+<li><p><strong>The distance to the function.</strong>
+This is what sort of return address the caller pushes onto the call stack,
+for the called function to pop off via its return instruction:  a "far"
+address that is a full, long form, machine address, or "near" address that
+is partial, short form, machine address.
+</p>
+</li><li><p><strong>How parameters are passed.</strong>
+Parameters to a function are variously passed as additional words pushed
+onto the call stack or as data in CPU registers.  Calling conventions
+dictate which parameters are passed where, and in what order.
+</p>
+</li><li><p><strong>How return values are retrieved.</strong>
+Return values from functions are variously retrieved by a caller
+from CPU registers; from pre-allocated areas of memory (usually on the
+call stack) whose addresses the caller specified as additional,
+hidden, parameters to the call; or from statically allocated areas
+of memory belonging to the called function.
+</p>
+</li><li><p><strong>Any additional stack framing.</strong>
+Additional stack framing can comprise things such as extra registers
+pushed onto the call stack that the called function is expected to
+pop off with its return instruction.
+</p>
+</li><li><p><strong>What processor state may have been modified.</strong>
+The interface contract includes a specification of which processor
+registers a caller can expect to have been modified by the called
+function, and which the called function guarantees to preserve across
+any call.
+</p>
+</li></ul>
+
+<p>
+Although they are, strictly speaking, not parts of such interface
+contracts, other things are often specified via the same mechanisms (i.e.
+extension keywords, linkage specifiers, and so forth) that are used in
+high-level languages to specify calling conventions:
+</p>
+<ul>
+<li><p><strong>The <em>naming convention</em> for the function.</strong>
+This is
+<a href=3D"http://jdebp.info/FGA/function-naming-conventions.html">
+how the name of the function in the high-level language is translated to a
+symbol name in object code</a>,
+for calling code to be linked to by the linker.  Together, the naming
+convention and the calling convention comprise the nebulous C and C++
+language concept of "linkage".
+</p>
+</li><li><p><strong>The function prologue and epilogue.</strong>
+These are internal matters for a called function.  But the mechanisms used
+by a compiler for a high-level language to control
+<a href=3D"http://jdebp.info/FGA/function-perilogues.html">
+function prologues and epilogues</a>
+are usually grouped with the mechanisms for controlling calling
+conventions.
+</p>
+</li></ul>
+
+<p>
+As stated, calling conventions encompass what CPU registers the caller
+can expect to change and to remain the same across a function call.  This
+is the notion of <em><dfn>register volatility</dfn></em>:
+</p>
+<ul>
+<li><p><em><dfn>Volatile registers</dfn></em> are freely modifiable by the
+called function.  If a caller has a value that it wishes to preserve in a
+volatile register before a call, it must execute code to save and restore
+the contents of that register before and after the call to the function.
+</p>
+</li><li><p><em><dfn>Non-volatile registers</dfn></em> are guaranteed to be
+preserved by the called function.  If the called function wishes to use a
+non-volatile register for some purpose, it must comprise code to save the
+value of that register as it was upon function entry, in order to restore
+it in any of its code paths for function exit.
+</p>
+</li></ul>
+
+<p>
+Calling conventions can be grouped into three main categories:
+</p>
+<ul>
+<li><p><strong>Calling conventions dictated by the platform.</strong>
+These are the calling conventions required by the platform, such as the
+calling convention for functions in the operating system's own API.  Most
+compiled languages targetting a platform will, of simple necessity,
+support the platform's system API calling convention.
+</p>
+</li><li><p><strong>Calling conventions dictated by the architecture.</stro=
+ng>
+These are calling conventions tailored for a particular use on a particular
+instruction set architecture, irrespective of operating system.
+</p>
+</li><li><p><strong>Compiler-specific calling conventions.</strong>
+These are calling conventions that are provided by one, or more, compilers,
+either as "go faster" features or as simple alternatives.  Some are
+the calling conventions employed by functions in the compiler's own
+runtime libraries, where those conventions differ from any platform or
+architecture calling convention.
+</p>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#Platform" title=3D"Platform-defined calling conventions">
+<h2 class=3D"ruled" id=3D"Platform">
+Platform-defined calling conventions
+</h2>
+
+<p>
+Platform-defined calling conventions usually comprise just system API
+calling conventions.  Platforms generally don't dictate what the calling
+conventions are for things that are not the system API on those platforms.
+</p>
+
+<p>
+System API calling conventions are, as stated, the calling conventions
+required by the API for the operating system itself.  In any compiled
+high-level language that supports program code calling operating system API
+functions directly, the compiler either has to use the system API calling
+convention as its default calling convention, or provide some mechanism
+for functions to be declared as having the system API calling convention.
+</p>
+
+<p>
+Using something other than the system API calling convention is
+<a href=3D"http://jdebp.info/FGA/dll-design-mistakes-to-avoid.html#UseTheSy=
+stemAPICallingConvention">
+one of mistakes to avoid when designing DLLs</a>.
+It's also a mistake to avoid when designing statically-linked libraries
+that are designed to be callable by code written in arbitrary languages
+and compiled with arbitrary compilers.
+</p>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#APIENTRY" title=3D"OS/2 system API calling conventions">
+<h3 class=3D"ruled" id=3D"APIENTRY">
+OS/2 system API calling conventions
+</h3>
+
+<p>
+The OS/2 system API calling convention is, technically,
+"<code>APIENTRY</code>".  That is the macro, defined by the system API
+C and C++ language header <code>&lt;os2.h&gt;</code>, that expands to
+whatever the compiler's particular keywords for specifying the requisite
+calling convention actually are.
+</p>
+
+<p>
+"<code>APIENTRY</code>" is, however, two distinct calling conventions, one
+for 16-bit OS/2 and one for 32-bit OS/2, whose calling conventions differ
+from each other.  The <code>APIENTRY</code> macro expands to two different
+sets of things, depending from whether one is using the 16-bit OS/2
+Developers' Toolkit for OS/2 version 1.x or the 32-bit OS/2 Developers'
+Toolkit for OS/2 version 2.x.
+</p>
+
+<p>
+This is further compounded by the fact that the	32-bit OS/2 version 2.x
+code can still call the 16-bit OS/2 system API if it wants to.  The 32-bit
+OS/2 Developers' Toolkit's <code>&lt;os2.h&gt;</code> header provides the
+<code>APIENTRY16</code> macro, for specifying the 16-bit OS/2 system API
+calling convention for function declarations in 32-bit code.
+</p>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#APIENTRY32" title=3D"32-bit OS/2 system API calling convention">
+<h4 class=3D"ruled" id=3D"APIENTRY32" style=3D"clear:right;">
+32-bit OS/2 system API calling convention
+</h4>
+
+<div class=3D"sidebar">
+<p>
+The 32-bit <code>APIENTRY</code> macro corresponds to the following
+compiler-specific calling convention specifiers:
+</p>
+<ul>
+<li><p><strong>Borland C/C++ for OS/2:</strong>
+<code>__syscall</code> keyword
+</p>
+</li><li><p><strong>MetaWare High C/C++ for OS/2:</strong>
+Nothing.
+</p>
+</li><li><p><strong>Watcom C/C++ (32-bit compiler):</strong>
+<code>__syscall</code> keyword (a.k.a. <code>_syscall</code>
+and <code>syscall</code>)
+</p>
+</li><li><p><strong>IBM VisualAge for C/C++ for OS/2:</strong>
+<code>_System</code> keyword and
+the <code>extern&nbsp;"System"</code>
+linkage specifier
+</p>
+</li></ul>
+<p>
+This is the default calling convention for:
+</p>
+<ul>
+<li><p class=3D"compact">MetaWare High C/C++ for OS/2</p>
+</li></ul>
+</div>
+
+<p>
+The 32-bit <code>APIENTRY</code> calling convention is as follows:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in right-to-left
+lexical order.
+</p>
+</li><li><p>
+Arguments of 8-bit and 16-bit integer types are promoted to 32-bit
+integers.  In the cases of variable-argument functions where the
+type of the parameter is not specified, and of unprototyped functions,
+arguments of 32-bit floating point type are promoted to 64-bit
+floating point.
+</p>
+</li><li><p>
+The following processor registers are volatile:
+<code>EAX</code>
+<code>ECX</code>
+<code>EDX</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+<code>GS</code>
+</p>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>EBX</code>
+<code>ESI</code>
+<code>EDI</code>
+<code>EBP</code>
+<code>ESP</code>
+<code>CS</code>
+<code>DS</code>
+<code>ES</code>
+<code>FS</code>
+</p>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>EFLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a simple (near) <code>RET</code>
+instruction.  It is the caller's responsibility to pop the function
+arguments back off the call stack.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer, 32-bit integer,
+and 0:32 pointer return values will be stored by the called function in
+the <code>EAX</code> register.
+</p>
+</li><li><p>
+64-bit integer
+and 16:32 pointer return values will be stored by the called function in th=
+e
+<code>EAX</code>/<code>EDX</code> register pair.
+</p>
+</li><li><p>
+Floating point return values will be stored by the called function in the
+<code>ST(0)</code> FPU register.
+</p>
+</li><li><p>
+For return values of structure or class type,
+the caller is expected to allocate space for a value of that type, passing
+a pointer to it as a hidden parameter, pushed onto the call stack after
+all other parameters.  The called function writes the return value to this
+address, and returns the address in the <code>EAX</code> register.
+</p>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#APIENTRY16" title=3D"16-bit OS/2 system API calling convention">
+<h4 class=3D"ruled" id=3D"APIENTRY16" style=3D"clear:right;">
+16-bit OS/2 system API calling convention
+</h4>
+
+<div class=3D"sidebar">
+<p>
+The 32-bit <code>APIENTRY16</code> macro corresponds to the following
+compiler-specific calling convention specifiers:
+</p>
+<ul>
+<li><p><strong>Borland C/C++ for OS/2:</strong>
+<code>__far16&nbsp;__pascal</code> keywords
+</p>
+</li><li><p><strong>Watcom C/C++ (32-bit compiler):</strong>
+<code>__far16&nbsp;__pascal</code> keywords
+(a.k.a.
+<code>_far16&nbsp;_pascal</code>
+and
+<code>_Far16&nbsp;_Pascal</code>)
+</p>
+</li><li><p><strong>IBM VisualAge for C/C++ for OS/2:</strong>
+<code>_Far16&nbsp;_Pascal</code> keywords
+</p>
+</li></ul>
+<p>
+The 16-bit <code>APIENTRY</code> macro corresponds to the following
+compiler-specific calling convention specifiers:
+</p>
+<ul>
+<li><p><strong>Watcom C/C++ (16-bit compiler):</strong>
+<code>__far&nbsp;__pascal</code> keywords
+(a.k.a.
+<code>_far&nbsp;_pascal</code>
+and
+<code>far&nbsp;pascal</code>)
+</p>
+</li><li><p><strong>IBM CSet C/C++ for OS/2:</strong>
+<code>far&nbsp;pascal</code> keywords
+</p>
+</li><li><p><strong>Microsoft C/C++ version 6 for OS/2:</strong>
+<code>far&nbsp;pascal</code> keywords
+</p>
+</li></ul>
+</div>
+
+<p>
+The 16-bit <code>APIENTRY</code> calling convention is as follows:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in left-to-right
+lexical order.
+</p>
+</li><li><p>
+Arguments of 8-bit integer types are promoted to 16-bit integers.
+In the cases of variable-argument functions where the
+type of the parameter is not specified, and of unprototyped functions,
+arguments of 32-bit floating point type are promoted to 64-bit floating
+point.
+</p>
+</li><li><p>
+The following processor registers are volatile:
+<code>AX</code>
+<code>BX</code>
+<code>CX</code>
+<code>DX</code>
+<code>ES</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+</p>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>SI</code>
+<code>DI</code>
+<code>BP</code>
+<code>SP</code> (see below)
+<code>CS</code>
+<code>DS</code>
+<code>FS</code>
+<code>GS</code>
+</p>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>FLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a <code>RETF</code>&nbsp;<i>n</i>
+instruction, popping the far return address and <i>n</i> additional bytes
+off the stack as it returns.  So whilst non-volatile register
+<code>SP</code> won't, strictly speaking, have its value exactly preserved
+across a call, it will be changed by a fixed amount relative to the value
+that it had upon entry.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer,
+and 0:16 pointer return values will be stored by the called function in
+the <code>AX</code> register.
+</p>
+</li><li><p>
+32-bit integer
+and 16:16 pointer return values will be stored by the called function in
+the <code>AX</code>/<code>DX</code> register pair.
+</p>
+</li><li><p>
+64-bit integers, 0:32 pointers, and 16:32 pointers cannot be returned.
+</p>
+</li><li><p>
+For return values of structure or class type and of all floating
+point types,
+the caller is expected to allocate space for a value of that type, passing
+a pointer to it as a hidden parameter, pushed onto the call stack after
+all other parameters.  The called function writes the return value to this
+address, and returns the address in the <code>EAX</code> register.
+</p>
+</li><li><p>
+The FPU registers are not used to return values.
+</p>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#WINAPI" title=3D"Win32 system API calling conventions">
+<h3 class=3D"ruled" id=3D"WINAPI" style=3D"clear:right;">
+Windows system API calling conventions
+</h3>
+
+<p>
+The Windows system API calling convention is, technically,
+"<code>WINAPI</code>".  Similarly, the Windows application callback
+calling convention is, technically, either "<code>CALLBACK</code>"
+or "<code>CALLBACK&nbsp;EXPORT</code>".
+Those are the macros, defined by the system API C and C++ language header
+<code>&lt;windows.h&gt;</code>, that expand to whatever the compiler's
+particular keywords for specifying the requisite calling convention
+actually are.  (<code>CALLBACK</code> was first introduced with the
+DOS-Windows version 3.1 Developers' Toolkit.  Before then, the macros
+were "<code>FAR&nbsp;PASCAL</code>", and you might see a fair amount of
+code here and there that failed to catch up with the DOS-Windows 3.1
+toolkit in this regard.  It has been twenty years since then,
+however.  It's been <code>CALLBACK</code> for Win16 for that long,
+and it has always been <code>CALLBACK</code> for Win32.)
+</p>
+
+<p>
+"<code>WINAPI</code>" is, however, two distinct calling conventions, one
+for the Win16 API and one for the Win32 API, whose calling conventions
+differ from each other.  Similarly,
+"<code>CALLBACK&nbsp;</code>(<code>EXPORT</code>)" is
+two distinct calling conventions, one for Win16 applications and one for
+Win32 applications.  The <code>WINAPI</code> and <code>CALLBACK</code>
+macros expand to two different sets of things, depending from whether one
+is using the 16-bit Windows Developers' Toolkit for Win16 or the 32-bit
+Windows Developers' Toolkit for Win32.
+</p>
+
+<p>
+This is further compounded by the fact that "<code>CALLBACK</code>" is
+more properly "<code>CALLBACK&nbsp;EXPORT</code>" or
+"<code>CALLBACK&nbsp;loadds</code>" on Win16.  It is in fact three
+distinct calling conventions in its own right, dependent from whether the
+function is in a DLL or an EXE, and whether
+<code>MakeProcInstance()</code> needs to be called or the function is a
+"smart callback".
+</p>
+
+<p>
+A final complication is that while Win16 only exists on x86 architectures,
+Win32 exists on x86, x86-64, IA64, Alpha, PowerPC, and MIPS architectures,
+each with their individual calling conventions.  The latter three are
+mainly of academic interest nowadays, given that Windows NT has been
+discontinued for those processor architectures.  This leaves just x86,
+x86-64, and IA64 whose Win32 calling conventions are of practical
+interest.
+</p>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#WIN32X86" title=3D"32-bit x86 Windows API/callback calling conve=
+ntions">
+<h4 class=3D"ruled" id=3D"WIN32X86" style=3D"clear:right;">
+32-bit x86 Windows system API and application callback calling conventions
+</h4>
+
+<div class=3D"sidebar">
+<p>
+The 32-bit <code>WINAPI</code> and <code>CALLBACK</code> macros correspond
+to the following compiler-specific calling convention specifiers:
+</p>
+<ul>
+<li><p><strong>Borland C/C++ for OS/2:</strong>
+<code>__stdcall</code> keyword
+</p>
+</li><li><p><strong>Borland C/C++ for Windows (32-bit compiler):</strong>
+<code>__stdcall</code> keyword
+</p>
+</li><li><p><strong>MetaWare High C/C++ for Windows:</strong>
+Nothing.
+</p>
+</li><li><p><strong>Watcom C/C++ (32-bit compiler):</strong>
+<code>__stdcall</code> keyword (a.k.a. <code>_stdcall</code>
+and <code>stdcall</code>)
+</p>
+</li><li><p><strong>Microsoft Visual C/C++ for Windows:</strong>
+<code>__stdcall</code> keyword
+</p>
+</li></ul>
+<p>
+This is the default calling convention for:
+</p>
+<ul>
+<li><p class=3D"compact">Borland C/C++ for OS/2</p>
+</li><li><p class=3D"compact">Borland C/C++ for Windows (32-bit compiler)</=
+p>
+</li><li><p class=3D"compact">MetaWare High C/C++ for Windows</p>
+</li></ul>
+</div>
+
+<p>
+The 32-bit <code>WINAPI</code> and 32-bit <code>CALLBACK</code> calling
+conventions for x86 processors are identical, and are as follows:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in right-to-left
+lexical order.
+</p>
+</li><li><p>
+Arguments of 8-bit and 16-bit integer types are promoted to 32-bit
+integers.
+In the cases of variable-argument functions where the
+type of the parameter is not specified, and of unprototyped functions,
+arguments of 32-bit floating point type are promoted to 64-bit
+floating point.
+</p>
+</li><li><p>
+The following processor registers are volatile:
+<code>EAX</code>
+<code>ECX</code>
+<code>EDX</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+</p>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>EBX</code>
+<code>ESI</code>
+<code>EDI</code>
+<code>EBP</code>
+<code>ESP</code> (see below)
+<code>CS</code>
+<code>DS</code>
+<code>ES</code>
+<code>FS</code>
+<code>GS</code>
+</p>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>EFLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a (near) <code>RET</code>&nbsp;<i>n</i>
+instruction, popping the near return address and <i>n</i> additional bytes
+off the stack as it returns.  So whilst non-volatile register
+<code>ESP</code> won't, strictly speaking, have its value exactly preserved
+across a call, it will be changed by a fixed amount relative to the value
+that it had upon entry.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer, 32-bit integer,
+and 0:32 pointer return values will be stored by the called function in
+the <code>EAX</code> register.
+</p>
+</li><li><p>
+64-bit integer
+and 16:32 pointer return values will be stored by the called function in
+the <code>EAX</code>/<code>EDX</code> register pair.
+</p>
+</li><li><p>
+Floating point return values will be stored by the called function in the
+<code>ST(0)</code> FPU register.
+</p>
+</li><li><p>
+For return values of structure or class type that are "plain old data
+structures" 32 bits or smaller in size,
+the called function stores the structure/class value in the
+<code>EAX</code> register.
+</p>
+<p>
+For return values of structure or class type that are "plain old data
+structures" 33 to 64 bits in size,
+the called function stores the structure/class value in the
+<code>EAX</code>/<code>EDX</code> register pair.
+</p>
+<blockquote class=3D"commentary"><p><strong>Note:</strong>
+Several compilers get this part wrong, including Watcom C/C++/Fortran
+and Borland C/C++ for OS/2.  They will erroneously expect 33 to 64 bit
+values to be returned in caller-allocated memory, not in registers.
+This is
+<a href=3D"http://bugzilla.openwatcom.org./show_bug.cgi?id=3D490">
+bug #490 in the OpenWatcom bug list</a>.
+</p></blockquote>
+<p>
+For return values of structure or class type that are not "plain old data
+structures" or that are larger than 64 bits,
+the caller is expected to allocate space for a value of that type, passing
+a pointer to it as a hidden parameter, pushed onto the call stack after
+all other parameters.  The called function writes the return value to this
+address, and returns the address in the <code>EAX</code> register.
+</p>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#WIN32X8664" title=3D"64-bit x86-64 Windows API/callback calling =
+conventions">
+<h4 class=3D"ruled" id=3D"WIN32X8664" style=3D"clear:right;">
+64-bit x86-64 Windows system API and application callback calling conventio=
+ns
+</h4>
+
+<p>
+The 64-bit <code>WINAPI</code> and 64-bit <code>CALLBACK</code> calling
+conventions for x86-64 processors are identical.  They are documented
+by Microsoft in
+<a href=3D"http://msdn.microsoft.com/en-us/library/9b372w95(VS.80).aspx">
+the Visual C/C++ Programming Guide</a>,
+and are as follows:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in right-to-left
+lexical order.
+</p>
+</li><li><p>
+Arguments smaller than 64 bits are widened to 64 bits by padding at the
+MSB end.  Note that this is widening, not promotion.  The padding bits are
+<em>not</em> guaranteed by the caller to be zeroes.
+</p>
+<p>
+Any arguments larger than 64 bits are stored in memory, required
+to be aligned to a 16-byte boundary, and their addresses, instead of their
+values, passed as parameters.
+</p>
+<p>
+1-byte to 8-byte arguments of structure or class type are passed as if
+they were values of (8-bit to 64-bit) integer type.  Values of larger
+structure or class types, or of 128-bit SIMD vector type, are treated as
+larger than 64-bit arguments and passed by reference.
+</p>
+<p>
+Values of 32-bit or 64-bit floating point type are passed as 64-bit
+values.  If the function is a variable-argument function and no type for a
+floating point argument has been declared, or if it is an unprototyped
+function, a value of 32-bit floating point type is promoted to a 64-bit
+floating point type.  Otherwise the 32-bit value is simply padded.
+</p>
+</li><li><p>
+The called function is responsible for keeping <code>RSP</code> aligned
+to a 16-byte boundary.  If it knows that the parameters plus return address
+on its call stack are not a integer multiple of 16-bytes, it is responsible
+for making up the difference as it constructs its stack frame in its
+function prologue.
+</p>
+</li><li><p>
+The first four arguments =97 either the arguments themselves or the
+addresses thereof =97 are stored in registers.  The caller also pushes
+dummy values onto the call stack for those arguments, to allow the called
+function to easily spill the argument values from registers to memory
+should it need to use the registers for other purposes.
+</p>
+<p>
+To account for variable-argument and unprototyped functions, the caller is
+required to always act as if at least four arguments are passed to every
+function, reserving space on the call stack for four arguments even if
+the declared parameter list for the function is shorter.
+</p>
+<p>
+The registers for arguments 1 to 4 are, respectively,
+<code>XMM(0)</code>=96<code>XMM(3)</code>
+for floating point values and
+<code>RCX</code>, <code>RDX</code>, <code>R8</code>, and <code>R9</code>
+for all other types.  If the function is a variable-argument function and
+no type for the argument has been declared, or if it is an unprototyped
+function, the caller must place the value in both registers for the
+argument, since it cannot know which register the called function will be
+expecting the value in.
+</p>
+</li><li><p>
+The following processor registers are volatile:
+<code>RAX</code>
+<code>RCX</code>
+<code>RDX</code>
+<code>R8</code>
+<code>R9</code>
+<code>R10</code>
+<code>R11</code>
+<code>XMM(0)</code>=96<code>XMM(5)</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+x87 status word
+<code>MXCSR</code> status word
+</p>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>RBX</code>
+<code>RSI</code>
+<code>RDI</code>
+<code>RBP</code>
+<code>RSP</code>
+<code>R12</code>
+<code>R13</code>
+<code>R14</code>
+<code>R15</code>
+<code>XMM(6)</code>=96<code>XMM(15)</code>
+<code>GS</code>
+x87 control word
+<code>MXCSR</code> control word
+</p>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>RFLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a <code>RET</code> instruction, popping
+the near return address off the stack as it returns.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer, 32-bit integer, 64-bit integer,
+1-byte to 8-byte structure,
+and pointer return values will be stored by the called function in
+the <code>RAX</code> register.
+</p>
+</li><li><p>
+32-bit floating point, 64-bit floating point,
+and 128-bit SIMD vector
+return values will be stored by the called function in
+the <code>XMM(0)</code> register.
+</p>
+</li><li><p>
+For return values of structure or class type larger than 8 bytes, the
+caller is expected to allocate space for a value of that type, passing a
+pointer to it as a hidden parameter, as if declared before all other
+parameters and treated exactly as if it were another ordinary parameter.
+The called function writes the return value to this address, and returns
+the address in the <code>RAX</code> register.
+</p>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#WINAPI16" title=3D"16-bit Windows system API calling convention"=
+>
+<h4 class=3D"ruled" id=3D"WINAPI16" style=3D"clear:right;">
+16-bit Windows system API calling convention
+</h4>
+
+<div class=3D"sidebar">
+<p>
+The 16-bit <code>WINAPI</code> macro corresponds to the following
+compiler-specific calling convention specifiers:
+</p>
+<ul>
+<li><p><strong>Borland C/C++ for Windows (16-bit compiler):</strong>
+<code>far&nbsp;pascal</code> keywords
+</p>
+</li><li><p><strong>Watcom C/C++ (16-bit compiler):</strong>
+<code>__far&nbsp;__pascal</code> keywords
+(a.k.a.
+<code>_far&nbsp;_pascal</code>
+and
+<code>far&nbsp;pascal</code>)
+</p>
+</li><li><p><strong>Microsoft C/C++ version 6/7 for Windows:</strong>
+<code>far&nbsp;pascal</code> keywords
+</p>
+</li></ul>
+</div>
+
+<p>
+The 16-bit <code>WINAPI</code> calling convention is as follows:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in left-to-right
+lexical order.
+</p>
+</li><li><p>
+Arguments of 8-bit integer types are promoted to 16-bit integers.
+In the cases of variable-argument functions where the
+type of the parameter is not specified, and of unprototyped functions,
+arguments of 32-bit floating point type are promoted to 64-bit floating
+point.
+</p>
+</li><li><p>
+The following processor registers are volatile:
+<code>AX</code>
+<code>BX</code>
+<code>CX</code>
+<code>DX</code>
+<code>ES</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+</p>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>SI</code>
+<code>DI</code>
+<code>BP</code>
+<code>SP</code> (see below)
+<code>CS</code>
+<code>DS</code>
+<code>FS</code>
+<code>GS</code>
+</p>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>FLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a <code>RETF</code>&nbsp;<i>n</i>
+instruction, popping the far return address and <i>n</i> additional bytes
+off the stack as it returns.  So whilst non-volatile register
+<code>SP</code> won't, strictly speaking, have its value exactly preserved
+across a call, it will be changed by a fixed amount relative to the value
+that it had upon entry.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer,
+and 0:16 pointer return values will be stored by the called function in
+the <code>AX</code> register.
+</p>
+</li><li><p>
+32-bit integer
+and 16:16 pointer return values will be stored by the called function in
+the <code>AX</code>/<code>DX</code> register pair.
+</p>
+</li><li><p>
+64-bit integers, 0:32 pointers, and 16:32 pointers cannot be returned.
+</p>
+</li><li><p>
+For return values of structure or class type and
+of floating point type,
+the caller is expected to allocate space for a value of that type, passing
+a pointer to it as a hidden parameter, pushed onto the call stack after
+all other parameters.  The called function writes the return value to this
+address, and returns the address in the <code>EAX</code> register.
+</p>
+</li><li><p>
+The FPU registers are not used to return values.
+</p>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#CALLBACK16" title=3D"16-bit Windows application callback calling=
+ convention">
+<h4 class=3D"ruled" id=3D"CALLBACK16" style=3D"clear:right;">
+16-bit Windows application callback calling convention
+</h4>
+
+<div class=3D"sidebar">
+<p>
+The 16-bit <code>CALLBACK&nbsp;EXPORT</code> macros correspond to the
+following compiler-specific calling convention specifiers:
+</p>
+<ul>
+<li><p><strong>Borland C/C++ for Windows (16-bit compiler):</strong>
+<code>far&nbsp;pascal&nbsp;export</code> keywords
+</p>
+</li><li><p><strong>Watcom C/C++ (16-bit compiler):</strong>
+<code>__far&nbsp;__pascal&nbsp;__export</code> keywords
+(a.k.a.
+<code>_far&nbsp;_pascal&nbsp;_export</code>
+and
+<code>far&nbsp;pascal&nbsp;export</code>)
+</p>
+</li><li><p><strong>Microsoft C/C++ version 6/7 for Windows:</strong>
+<code>far&nbsp;pascal&nbsp;export</code> keywords
+</p>
+</li></ul>
+</div>
+
+<p>
+The 16-bit <code>CALLBACK&nbsp;EXPORT</code> calling convention is as
+follows:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in left-to-right
+lexical order.
+</p>
+</li><li><p>
+Arguments of 8-bit integer types are promoted to 16-bit integers.
+In the cases of variable-argument functions where the
+type of the parameter is not specified, and of unprototyped functions,
+arguments of 32-bit floating point type are promoted to 64-bit floating
+point.
+</p>
+</li><li><p>
+The following processor registers are volatile:
+<code>AX</code>
+<code>BX</code>
+<code>CX</code>
+<code>DX</code>
+<code>ES</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+</p>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>SI</code>
+<code>DI</code>
+<code>BP</code>
+<code>SP</code> (see below)
+<code>CS</code>
+<code>DS</code>
+<code>FS</code>
+<code>GS</code>
+</p>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>FLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a <code>RETF</code>&nbsp;<i>n</i>
+instruction, popping the far return address and <i>n</i> additional bytes
+off the stack as it returns.  So whilst non-volatile register
+<code>SP</code> won't, strictly speaking, have its value exactly preserved
+across a call, it will be changed by a fixed amount relative to the value
+that it had upon entry.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer,
+and 0:16 pointer return values will be stored by the called function in
+the <code>AX</code> register.
+</p>
+</li><li><p>
+32-bit integer
+and 16:16 pointer return values will be stored by the called function in
+the <code>AX</code>/<code>DX</code> register pair.
+</p>
+</li><li><p>
+64-bit integers, 0:32 pointers, and 16:32 pointers cannot be returned.
+</p>
+</li><li><p>
+For return values of structure or class type and
+of floating point type,
+the caller is expected to allocate space for a value of that type, passing
+a pointer to it as a hidden parameter, pushed onto the call stack after
+all other parameters.  The called function writes the return value to this
+address, and returns the address in the <code>EAX</code> register.
+</p>
+</li><li><p>
+The FPU registers are not used to return values.
+</p>
+</li><li><p>
+The function prologue must be preceded by the following 3-byte sequence,
+which the Windows image loader expects to be able to overwrite with
+3 <code>nop</code> instructions:
+</p>
+<blockquote><pre><code>push ds
+pop ax
+nop</code></pre></blockquote>
+<p>
+And the prologue and epilogue themselves must comprise code to set the
+(non-volatile) <code>DS</code> register to whatever the <code>AX</code>
+register is on entry to the prologue:
+</p>
+<blockquote><pre><code>push ds
+mov ds,ax
+=85
+pop ds</code></pre></blockquote>
+<p>
+The value of <code>AX</code> on entry to a function is modified by an
+"instance thunk" created by <code>MakeProcInstance()</code>.  (Hence
+<code>AX</code> is a volatile register, but not one that could be used for
+potentially storing argument values in a "go faster" modification to
+the calling convention.)
+</p>
+</li></ul>
+
+<div class=3D"sidebar" style=3D"clear:right;">
+<p>
+C/C++ compiler options controlling what the calling conventions are for
+<code>CALLBACK&nbsp;EXPORT</code> functions.
+</p>
+<ul>
+<li><p>
+Generate the original "load DS from DS" prefix code, requiring
+<code>MakeProcInstance()</code> in order to be callable:
+</p><ul>
+<li><p class=3D"compact">
+<strong>Borland C/C++ for Windows (16-bit compiler):</strong>
+Not available.
+</p>
+</li><li><p class=3D"compact">
+<strong>Watcom C/C++/Fortran (16-bit compiler):</strong>
+<code>-zW</code>
+(with <code>-zw</code>, <em>all</em> <code>CALLBACK</code> functions are
+treated as if they were <code>CALLBACK&nbsp;EXPORT</code> functions)
+</p>
+</li><li><p class=3D"compact">
+<strong>Microsoft C/C++ version 7 for Windows:</strong>
+<code>/GEa</code>
+</p>
+</li><li><p class=3D"compact">
+<strong>Digital Mars C/C++ for Windows (16-bit compiler):</strong>
+<code>-Wa</code>
+</p>
+</li></ul>
+</li><li><p>
+Generate "load DS from DGROUP" prefix code, suitable for DLLs only.
+</p><ul>
+<li><p class=3D"compact">
+<strong>Borland C/C++ for Windows (16-bit compiler):</strong>
+<code>-WE</code> or <code>-WDE</code>
+(with <code>-W</code> and <code>-WD</code>, <em>all</em>
+<code>CALLBACK</code> functions are treated as if they were
+<code>CALLBACK&nbsp;EXPORT</code> functions)
+</p>
+</li><li><p class=3D"compact">
+<strong>Watcom C/C++/Fortran (16-bit compiler):</strong>
+Not available.
+</p>
+</li><li><p class=3D"compact">
+<strong>Microsoft C/C++ version 7 for Windows:</strong>
+<code>/GEd</code>
+</p>
+</li><li><p class=3D"compact">
+<strong>Digital Mars C/C++ for Windows (16-bit compiler):</strong>
+<code>-Wd</code>
+</p>
+</li></ul>
+</li><li><p>
+Generate "load DS from SS" prefix code, suitable for EXEs only.
+</p><ul compact=3D"">
+<li><p class=3D"compact">
+<strong>Borland C/C++ for Windows (16-bit compiler):</strong>
+<code>-WSE</code>
+(with <code>-WS</code>, <em>all</em> <code>CALLBACK</code> functions are
+treated as if they were <code>CALLBACK&nbsp;EXPORT</code> functions)
+</p>
+</li><li><p class=3D"compact">
+<strong>Watcom C/C++/Fortran (16-bit compiler):</strong>
+<code>-zWs</code>
+</p>
+</li><li><p class=3D"compact">
+<strong>Microsoft C/C++ version 7 for Windows:</strong>
+<code>/GEs</code>
+</p>
+</li><li><p class=3D"compact">
+<strong>Digital Mars C/C++ for Windows (16-bit compiler):</strong>
+<code>-Ws</code>
+</p>
+</li></ul>
+</li></ul>
+</div>
+
+<p>
+As
+<a href=3D"http://blogs.msdn.com./oldnewthing/archive/2008/02/077502464.asp=
+x">
+Raymond Chen reports</a>,
+<a href=3D"http://geary.com./fixds.html">
+Michael Geary discovered a trick</a>
+in 1989 that did away with the necessity for
+<code>MakeProcInstance()</code> entirely.  This trick was later
+incorporated into Borland's, Watcom's, Microsoft's, and the Digital Mars
+compilers.  The upshot of the trick was this:
+</p>
+<ul>
+<li><p>Callback functions in EXEs still have to be declared
+<code>CALLBACK&nbsp;EXPORT</code>.  <em>However</em>, the compilers can be
+told to recognize such functions and turn them into "smart callbacks" that
+have the following replacement 3-byte prefix to the prologue:
+</p>
+<blockquote><pre><code>mov ax,ss
+nop</code></pre></blockquote>
+</li><li><p>Callback functions in DLLs can be declared
+<code>CALLBACK&nbsp;EXPORT</code>.  <em>However</em>, the compilers can be
+told to recognize such functions and turn them into "smart callbacks" that
+have the following replacement 3-byte prefix to the prologue:
+</p>
+<blockquote><pre><code>mov ax,DGROUP
+nop</code></pre></blockquote>
+</li><li><p>Callback functions in DLLs can be <em>instead</em> declared
+<code>CALLBACK&nbsp;loadds</code>, which again causes the the following
+replacement 3-byte prefix to the prologue to be used:
+</p>
+<blockquote><pre><code>mov ax,DGROUP
+nop</code></pre></blockquote>
+</li></ul>
+<p>
+The Windows image loader will not overwrite any of these latter 3-byte
+prefixes, since they are not forms that it recognizes.
+</p>
+<p>
+Unfortunately, however, there is no longer, with
+<a href=3D"http://jdebp.info/FGA/function-perilogues.html#Win16Callbacks">
+this modified "smarter" perilogue</a>,
+a uniform approach that can be used in both DLLs and EXEs. Code for a
+<code>CALLBACK&nbsp;EXPORT</code> function compiled for a DLL cannot be
+linked into and properly used in an EXE, and vice versa.  EXEs will have
+different <code>DGROUP</code>s for different instances, and in DLLs
+<code>SS</code> is not equal to the DLL's data segment.  Hence, any
+statically-linked library providing <code>CALLBACK&nbsp;EXPORT</code>
+functions has to be provided in two forms, one for linking into EXEs and
+one for linking into DLLs.
+</p>
+<p>
+On the gripping hand, generally only window procedures will be
+<code>CALLBACK&nbsp;EXPORT</code>, and it is more usually the case for
+statically-linked libraries to provide functions that use the
+<code>WINAPI</code> or some other calling convention, to which all of
+these considerations for <code>CALLBACK&nbsp;EXPORT</code> do not apply.
+</p>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#UnixAPI" title=3D"Unix system API calling conventions">
+<h3 class=3D"ruled" id=3D"UnixAPI">
+Unix system API calling conventions
+</h3>
+
+<p>
+Given the plethora of processor architectures that Unices and Linux are
+available for, there isn't a single system API calling convention for
+Unices and Linux, as there is for OS/2, Win32, and Win16.  Rather, Unices
+and Linux adhere to what is known as an ABI, an Application Binary
+Interface.  Most ABIs are descended from the AT&amp;T System V Unix ABI
+definitions.  They are defined, for Unix, for a given processor
+architecture, and any Unix or Linux for that processor architecture will
+usually adhere to the architecture's Unix ABI in its system call library.
+</p>
+
+<p>
+This hasn't stopped some Unix vendors, such as Apple, defining their own
+individual ABIs for various processor architectures, that are specific
+to their operating systems.
+</p>
+
+<p>
+To an extent there's a "Unix-tinted glasses" effect that Unix programmers
+suffer from when talking about Unix ABIs. They can tend to paint them as
+architecture-specific rather than as platform-specific.  However, as can
+be seen from the differences between them and the OS/2, Win16, and Win32
+calling conventions for the same architectures, they really are
+<em>platform</em>-specific, pertaining to Unix in particular and not to an
+entire processor architecture in general.
+</p>
+
+<p>
+This is often given away by the formal full names of the ABI
+specifications, which explicitly state their platform-specific natures.
+For example:  The Apple ABI is, formally, the <i><strong>MacOS X</strong>
+ABI</i> (i.e. specific to the MacOS 10 platform), which is in turn based
+upon the <i><strong>System V</strong> Application Binary Interface</i>
+(i.e. the ABI specifically for AT&amp;T Unix System V).
+</p>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#MACOS10X86ABI" title=3D"Mac OS 10 x86 ABI calling convention">
+<h4 class=3D"ruled" id=3D"MACOS10X86ABI">
+MacOS version 10 x86 ABI calling convention
+</h4>
+
+<p>
+The x86 ABI for MacOS version 10
+(<a href=3D"http://developer.apple.com./mac/library/documentation/Developer=
+Tools/Conceptual/LowLevelABI/130-IA-32_Function_Calling_Conventions/IA32.ht=
+ml">documented
+by Apple in the MacOS 10 Reference Library</a>)
+includes the following calling convention, as used by the system API
+library:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in right-to-left
+lexical order.
+</p>
+</li><li><p>
+Arguments pushed onto the call stack are padded up to the next multiple of
+4 bytes (for integers and pointers), and the argument block as a whole is
+padded (at the right-hand end) to keep the stack pointer that the called
+function receives, on entry, aligned to a multiple of 16 bytes.
+</p>
+</li><li><p>
+Special treatment is given to 128-bit SIMD vector values, passing them
+in the processor's SIMD registers
+(<code>XMM(0)</code>=96<code>XMM(3)</code>) if possible.
+</p>
+</li><li><p>
+The following processor registers are volatile:
+<code>EAX</code>
+<code>ECX</code>
+<code>EDX</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+</p>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>EBX</code>
+<code>ESI</code>
+<code>EDI</code>
+<code>EBP</code>
+<code>ESP</code>
+<code>CS</code>
+<code>DS</code>
+<code>ES</code>
+<code>FS</code>
+<code>GS</code>
+</p>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>EFLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a simple (near) <code>RET</code>
+instruction.  It is the caller's responsibility to pop the function
+arguments back off the call stack.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer, 32-bit integer,
+and 0:32 pointer return values will be stored by the called function in
+the <code>EAX</code> register.
+</p>
+</li><li><p>
+64-bit integer,
+and 16:32 pointer return values will be stored by the called function in th=
+e
+<code>EAX</code>/<code>EDX</code> register pair.
+</p>
+</li><li><p>
+Floating point return values will be stored by the called function in the
+<code>ST(0)</code> FPU register.
+</p>
+</li><li><p>
+For return values of structure or class type that are "plain old data
+structures" 32 bits or smaller in size,
+the called function stores the structure/class value in the
+<code>EAX</code> register.
+</p>
+<p>
+For return values of structure or class type that are "plain old data
+structures" 33 to 64 bits in size,
+the called function stores the structure/class value in the
+<code>EAX</code>/<code>EDX</code> register pair.
+</p>
+<p>
+For return values of structure or class type that are not "plain old data
+structures" or that are larger than 64 bits,
+the caller is expected to allocate space for a value of that type, passing
+a pointer to it as a hidden parameter, pushed onto the call stack after
+all other parameters.  The called function writes the return value to this
+address, and returns the address in the <code>EAX</code> register.
+</p>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#UNIXX8664" title=3D"64-bit x86-64 System V Unix ABI calling conv=
+ention">
+<h4 class=3D"ruled" id=3D"UNIXX8664" style=3D"clear:right;">
+64-bit x86-64 System V Unix ABI calling convention
+</h4>
+
+<p>
+The 64-bit System V Unix ABI calling convention for x86-64 processors
+(<a href=3D"http://x86-64.org./documentation/abi.pdf">documented
+by AMD</a>)
+is as follows:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in right-to-left
+lexical order.
+</p>
+</li><li><p>
+Arguments smaller than 64 bits are promoted to 64 bits by padding at the
+MSB end.
+</p>
+</li><li><p>The argument passing conventions are insanely overcomplex, maki=
+ng
+the Win32 x86-64 system API calling convention seem simple by comparison.
+Arguments are classified according to a byzantine set of rules, laid out
+over <em>four pages</em> in AMD's ABI, that end up with their eventually
+being classified as INTEGER, MEMORY, X87, COMPLEX,
+8-byte SSE, or 16-byte AVX:
+</p>
+<ul>
+<li><p>
+MEMORY arguments are pushed onto the call stack, passing them by value.
+</p>
+</li><li><p>
+X87 and COMPLEX arguments are stored in memory, with their addresses
+pushed onto the call stack, passing them by address.
+</p>
+</li><li><p>INTEGER arguments are passed in the first available register of
+<code>RDI</code>, <code>RSI</code>, <code>RDX</code>, <code>RCS</code>,
+<code>R8</code>, and <code>R9</code>, used in that order (with no gaps);
+or on the call stack if all registers have been used.
+</p>
+</li><li><p>8-byte SSE arguments are passed in the first available register=
+ of
+<code>XMM(0)</code>=96<code>XMM(7)</code>, used in that order (with no
+gaps); or on the call stack if all registers have been used.
+</p>
+</li><li><p>16-byte AVX arguments are passed in the first available registe=
+r of
+<code>YMM(0)</code>=96<code>YMM(7)</code>, used in that order (with no
+gaps); or on the call stack if all registers have been used.  Use of an
+XMM register by an 8-byte SSE argument precludes use of the overlapping
+YMM register by a 16-byte AVX argument.
+</p>
+</li></ul>
+<p>
+Note that the rules are not straightforward and obvious.  Whether an
+argument of structure or class type ends up as MEMORY or INTEGER depends
+from what sort of C++ constructor it has, for example.  Structures are
+classified by their data members, so potentially a structure type could
+end up classified as X87, SSE, AVX, or COMPLEX.  Some floating
+point types are SSE, and some X87, and this is not a simple cut-off at
+one particular bit-size.  And there are non-trivial rules on how
+128-bit integer and 80-bit floating point types are decomposed across
+registers and in words on the call stack.
+</p>
+<p>
+For variable-argument and unprototyped functions, the caller is required
+to place the number of registers used to pass arguments in the
+<code>AL</code> register, so that the called function can know when to
+stop looking in registers for arguments and when to start looking on the
+call stack.  Variable-argument and unprototyped functions thus have to
+compare the argument number that they are looking for against the contents
+of the <code>AL</code> register in order to work out where to find each
+argument. (Contrast this with the Win32 x86-64 system API calling
+convention, which requires that the caller populate all of the registers
+that the called function might look in, and always reserve stack locations
+corresponding to register parameters, allowing a called function to
+hardwire the register or stack location that it accesses for any given
+parameter, without it having to worry about how many registers were
+actually used by the caller.)
+</p>
+</li><li><p>
+Arguments pushed onto the call stack are padded up to the next multiple of
+4 bytes, and the argument block as a whole is padded (at the right-hand
+end) to keep the stack pointer that the called function receives, on
+entry, aligned to a multiple of 16 bytes.
+</p>
+</li><li><p>
+The following processor registers are volatile:
+<code>RAX</code>
+<code>RCX</code>
+<code>RDX</code>
+<code>RSI</code>
+<code>RDI</code>
+<code>R8</code>
+<code>R9</code>
+<code>R10</code>
+<code>R11</code>
+<code>XMM(0)</code>=96<code>XMM(15)</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+x87 status word
+<code>MXCSR</code> status word
+</p>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>RBX</code>
+<code>RBP</code>
+<code>RSP</code>
+<code>R12</code>
+<code>R13</code>
+<code>R14</code>
+<code>R15</code>
+x87 control word
+<code>MXCSR</code> control word
+</p>
+</li><li><p>
+The processor must be in x87 mode on entry to and on exit from the
+function.
+</p>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>RFLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a <code>RET</code> instruction, popping
+the near return address off the stack as it returns.
+</p>
+</li><li><p>The return value passing conventions are, again, insanely
+overcomplex, making the Win32 x86-64 system API calling convention seem
+simple by comparison.  Return values are classified according to the same
+byzantine set of rules as arguments are, again ending up with their
+eventually being classified as INTEGER, MEMORY, X87, COMPLEX, 8-byte SSE,
+or 16-byte AVX:
+</p>
+<ul>
+<li><p>
+For MEMORY return values
+the caller is expected to allocate space for a value of that type, passing
+a pointer to it as a hidden parameter, treated as an extra parameter
+coming before all others (and so affecting the classifications of
+arguments passed to the function).  The called function writes the return
+value to this address, and returns the address in the <code>RAX</code>
+register.
+</p>
+</li><li><p>INTEGER return values are stored by the called function in the
+first available register of <code>RAX</code> and <code>RDX</code>, in that
+order.
+</p>
+</li><li><p>X87 return values are stored by the called function in the
+<code>ST(0)</code> register.
+</p>
+</li><li><p>COMPLEX return values are stored by the called function in the
+<code>ST(0)</code> and <code>ST(1)</code>registers.
+</p>
+</li><li><p>8-byte SSE return values are stored by the called function in t=
+he
+first available register of <code>XMM(0)</code> and <code>XMM(1)</code>,
+in that order.
+</p>
+</li><li><p>16-byte AVXE return values are stored by the called function in=
+ the
+first available register of <code>YMM(0)</code> and <code>YMM(1)</code>,
+in that order.  Use of an XMM register by an 8-byte SSE return value, or
+an ST register by an X87 return value, precludes use of the overlapping
+YMM register by a 16-byte AVX return value.
+</p>
+</li></ul>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#UNIXIA64" title=3D"IA64 System V Unix ABI calling convention">
+<h4 class=3D"ruled" id=3D"UNIXIA64" style=3D"clear:right;">
+IA64 System V Unix ABI calling convention
+</h4>
+
+<p>
+The System V Unix ABI calling convention for IA64 processors
+is
+<a href=3D"http://download.intel.com./design/Itanium/Downloads/245370.pdf">=
+documented
+by Intel</a>.
+</p>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#Architecture" title=3D"Architecture-defined calling conventions"=
+>
+<h2 class=3D"ruled" id=3D"Architecture">
+Architecture-defined calling conventions
+</h2>
+
+<p>
+Architecture-defined calling conventions are, as stated, calling
+conventions defined by the instruction set architecture itself,
+independently of the platform.
+</p>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#INT86" title=3D"x86 interrupt calling conventions">
+<h3 class=3D"ruled" id=3D"INT86" style=3D"clear:right;">
+x86 interrupt calling conventions
+</h3>
+
+<div class=3D"sidebar">
+<p>
+The interrupt calling convention is specified using these
+compiler-specific calling convention specifiers:
+</p>
+<ul>
+<li><p><strong>Borland C/C++:</strong>
+<code>__interrupt</code> keyword
+</p>
+</li><li><p><strong>Watcom C/C++:</strong>
+<code>__interrupt</code> keyword (a.k.a. <code>_interrupt</code>
+and <code>interrupt</code>)
+</p>
+</li><li><p><strong>Digital Mars C/C++ (16-bit compiler):</strong>
+<code>__interrupt</code> keyword
+</p>
+</li></ul>
+</div>
+
+<p>
+The "interrupt" calling convention for the x86 family of processors is
+the calling convention required by the instruction set architecture
+for functions that are to be used directly as processor interrupt
+handling functions.
+</p>
+
+<p>
+The interrupt calling convention is as follows:
+</p>
+<ul>
+<li><p>
+There are no arguments passed by the caller.
+</p>
+</li><li><p>
+No processor registers are volatile.
+</p>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>EAX</code>
+<code>EBX</code>
+<code>ECX</code>
+<code>EDX</code>
+<code>ESI</code>
+<code>EDI</code>
+<code>EBP</code>
+<code>ESP</code>
+<code>CS</code>
+<code>DS</code>
+<code>ES</code>
+<code>FS</code>
+<code>GS</code>
+</p>
+</li><li><p>
+The called function will exit with a <code>IRET</code>
+or <code>IRETD</code> instruction.
+</p>
+</li><li><p>
+There are no return values returned to the caller.
+</p>
+</li></ul>
+
+<p>
+Although the caller is unable to pass arguments to an interrupt function,
+in high-level languages interrupt functions can (if the compiler supports
+doing so) operate <em>as if</em> a caller had passed, as arguments, the
+processor registers as they were on entry to the function, allowing direct
+access to those registers values from within the function code as if they
+were ordinary function parameters.  On Watcom C/C++, for example, an
+interrupt function can be declared with a <code>union&nbsp;INTPACK</code>
+argument.  The compiler automatically generates code in the called
+function to save all of the register values upon entry to the function, in
+such a way that they can be accessed as if they were normal
+function parameters.
+</p>
+
+<p>
+This calling convention, as provided by C and C++ compilers, also
+introduces an otherwise entirely foreign concept into the C and C++
+languages:  <em>pass-by-value-return</em> parameters.  C and C++
+function parameters are either <em>pass-by-value</em> or
+<em>pass-by-reference</em>.  But the register block parameters to an
+interrupt function are pass-by-value-return.  The values in the parameters
+are copied back into the processor registers upon function exit.  Thus,
+and oddly for the C and C++ languages, modifications to what
+<em>appear</em>, syntactically, to be parameters passed by value actually
+propagate out to the original values outside of the function being called.
+</p>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#Compiler" title=3D"Compiler-defined calling conventions">
+<h2 class=3D"ruled" id=3D"Compiler">
+Compiler-defined calling conventions
+</h2>
+
+<p>
+Compiler-defined calling conventions are, as stated, calling conventions
+defined by a particular compiler.  Compilers often define their own
+calling conventions, in addition to the platform-defined ones.  Mainly
+this is in cases where the compiler-defined calling conventions are in
+some respects superior to the platform-defined ones, since they can take
+advantage of the fact that they are usually language-specific, whereas
+the platform-defined calling conventions have to be language-neutral.
+</p>
+
+<p>
+There are two main groupings of compiler-defined calling conventions:
+</p>
+<ul>
+<li><p>compiler-defined calling conventions that attempt to provide a
+common "Microsoft C-like" calling convention
+</p>
+</li><li><p>compiler-defined calling conventions that take platform-defined
+stack-based calling conventions and add "go faster" register-based
+improvements to them
+</p>
+</li></ul>
+
+<p>
+In most cases, a compiler-defined calling convention is in fact the
+<em>default</em> calling convention used by the compiler, and
+platform-defined or architecture-defined calling conventions have to be
+explicitly specified either by compiler command-line options or via
+explicit calling convention specifiers in the program source code.
+</p>
+
+<p>
+Except for the "Microsoft C-like" calling convention, most
+compiler-defined calling conventions are also compiler specific, in that
+there's no way to specify exactly the same calling convention with another
+compiler.  Sometimes the keywords look the same, but the conventions
+differ.  Sometimes there simply isn't a keyword at all.
+</p>
+
+<p>
+Even Watcom C/C++, whose <code>#pragma&nbsp;aux</code> facility allows
+programmers to define new keywords for user-specified calling conventions,
+is not flexible enough to be capable of <em>all</em> compiler-defined
+calling conventions.  (A programmer cannot define
+<a href=3D"http://jdebp.info/FGA/function-calling-conventions.html#Optlink"=
+>
+IBM's <code>Optlink</code> convention</a>
+with Watcom C/C++'s <code>#pragma&nbsp;aux</code>, for example, since it
+has no mechanism for specifying either placeholders on the call stack or
+arguments passed in the CPU registers.  Watcom C/C++ contains an internal
+bodge for working around this that is not expressible in source code
+form.)
+</p>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#cdecl" title=3D"cdecl calling conventions">
+<h3 class=3D"ruled" id=3D"cdecl" style=3D"clear:right;">
+"common" <code>cdecl</code> calling conventions
+</h3>
+
+<div class=3D"sidebar">
+<p>
+The <code>cdecl</code> calling convention is specified with:
+</p>
+<ul>
+<li><p><strong>Borland C/C++ for OS/2:</strong>
+<code>__cdecl</code> keyword
+</p>
+</li><li><p><strong>Borland C/C++ for DOS/Windows:</strong>
+<code>cdecl</code> keyword
+</p>
+</li><li><p><strong>Microsoft C version 6:</strong>
+<code>cdecl</code> keyword
+</p>
+</li><li><p><strong>Microsoft Visual C/C++:</strong>
+<code>__cdecl</code> keyword
+</p>
+</li><li><p><strong>Watcom C/C++:</strong>
+<code>__cdecl</code> keyword (a.k.a. <code>_cdecl</code>
+and <code>cdecl</code>)
+</p>
+</li></ul>
+<p>
+This is the default calling convention for:
+</p>
+<ul>
+<li><p class=3D"compact">Microsoft C/C++ version 5/6</p>
+</li><li><p class=3D"compact">Microsoft Visual C/C++</p>
+</li><li><p class=3D"compact">Borland C/C++ for DOS/Windows (16-bit compile=
+r)</p>
+</li></ul>
+</div>
+
+<p>
+The <code>cdecl</code> calling convention is a last vestige of the days
+of PC/MS/DR-DOS.  Back before the existence of Windows NT, OS/2, or even
+DOS-Windows, the only (major) operating system API in the world of the IBM
+PC/AT compatible was the PC/MS/DR-DOS system API.  The DOS system API,
+unlike the system APIs of its aforementioned successors, was not directly
+callable from high-level languages.  Therefore the
+<a href=3D"http://jdebp.info/FGA/dos-api-bindings.html">language
+bindings to the PC/MS/DR-DOS API</a>
+comprised wrapper functions, private to the runtime library of each
+language.
+</p>
+
+<p>
+The DOS system API's calling conventions were thus
+<em>language-defined</em> rather than platform-defined.  The DOS API
+bindings for Microsoft C had one calling convention.  The DOS API bindings
+for Microsoft PASCAL had another.  Microsoft FORTRAN and COBOL had
+specific calling conventions for their DOS API wrappers, too.
+Thus came about calling conventions known as <code>cdecl</code>,
+<code>pascal</code>, <code>fortran</code>, and so forth.  Each was
+whatever calling convention the Microsoft compiler for that language used
+for its DOS API wrapper functions.
+</p>
+
+<p>
+The notion of language-defined calling conventions disappeared over twenty
+years ago.  Operating systems with system APIs that were directly callable
+from high-level languages appeared, and by the time of the DOS-Windows 3.1
+Developers' Toolkit, which finally replaced <code>FAR&nbsp;PASCAL</code>
+with <code>CALLBACK</code>, the notion of the <em>platform</em>-defined
+calling convention had almost entirely replaced the notion of the
+language-defined calling convention.
+</p>
+
+<p>
+The one remaining vestige of language-defined calling conventions is the
+common <code>cdecl</code> convention still supported by most C/C++
+compilers for x86, both 16-bit and 32-bit.  The calling convention remains
+"whatever Microsoft C used to do" for its 16-bit DOS API wrappers.
+</p>
+
+<p>
+Although commonly thought of as the default calling convention for C and
+C++ compilers, the <code>cdecl</code> calling convention is <em>actually
+not the default</em> in all but a very few C/C++ compilers.  Everyone else
+defaults to their own compiler-defined calling conventions, defaults to to
+whatever the target platform's platform-defined system API calling
+convention is, or (in one oddball case) defaults to the Win32 system API
+calling convention irrespective of target platform.  The reality is that
+the <code>cdecl</code> calling convention is, everywhere outside of
+Microsoft's own compilers and 16-bit Borland C/C++, an alternative
+<em>non-default</em> compatibility option, for doing "whatever Microsoft C
+used to do" if that is desired.
+</p>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#cdecl16" title=3D"16-bit cdecl calling convention">
+<h4 class=3D"ruled" id=3D"cdecl16" style=3D"clear:right;">
+16-bit <code>cdecl</code> calling convention
+</h4>
+
+<p>
+The 16-bit <code>cdecl</code> calling convention is, as stated, "whatever
+Microsoft C used to do" for its 16-bit DOS API wrappers, and is as
+follows:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in right-to-left
+lexical order.
+</p>
+</li><li><p>
+Arguments of 8-bit integer type are promoted to 16-bit integers.
+In the cases of variable-argument functions where the
+type of the parameter is not specified, and of unprototyped functions,
+arguments of 32-bit floating point type are promoted to 64-bit floating
+point.
+</p>
+</li><li><p>
+The following processor registers are volatile:
+<code>AX</code>
+<code>BX</code>
+<code>CX</code>
+<code>DX</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+<code>ES</code>
+</p>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>SI</code>
+<code>DI</code>
+<code>BP</code>
+<code>SP</code>
+<code>CS</code>
+<code>DS</code>
+<code>FS</code>
+<code>GS</code>
+</p>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>FLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a simple <code>RET</code>
+instruction.  It is the caller's responsibility to pop the function
+arguments back off the call stack.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer,
+and near pointer return values will be stored by the called function in
+the <code>AX</code> register.
+</p>
+</li><li><p>
+64-bit integer, 32-bit integer,
+and far pointer return values will be stored by the called function in the
+<code>AX</code>/<code>DX</code> register pair.
+</p>
+</li><li><p>
+The FPU registers are not used to return values.
+</p>
+</li><li><p>
+For return values of structure or class type, or of floating-point type,
+the called function is expected to allocate space for a value of that
+type, writing the return value to this address, and returning the address
+in the <code>AX</code> register.
+</p>
+<p>
+Because the called function cannot use the call stack for this, since the
+call stack pointer is restored by the caller after function exit, and
+because it cannot use the heap either, it must use a fixed-address portion
+of static non-constant data storage for such structure values.  This makes
+the 16-bit <code>cdecl</code> calling convention inherently not
+thread-safe when it comes to returning values of structure, class, or
+floating-point type.
+</p>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#cdecl32" title=3D"32-bit cdecl calling convention">
+<h4 class=3D"ruled" id=3D"cdecl32" style=3D"clear:right;">
+32-bit <code>cdecl</code> calling convention
+</h4>
+
+<p>
+The 32-bit <code>cdecl</code> calling convention is provided by 32-bit
+compilers that have 16-bit predecesors, and is the logical extension of
+the 16-bit <code>cdecl</code> calling convention to 32-bits, albeit that
+there was, of course, no 32-bit Microsoft C for DOS and thus nothing to
+mimic.  It differs from the 16-bit calling convention in several
+major respects:
+</p>
+<ul>
+<li><p>
+The <code>EBX</code> register is non-volatile.
+</p>
+</li><li><p>
+Whether the <code>FS</code> register is non-volatile depends both from
+what platform the compiler is targetting and what compiler is being
+employed.  (The Win32 and OS/2 platforms dictate the volatility of
+<code>FS</code>.  But on extended DOS, the choice is left to compilers,
+and different compilers have different choices.)
+</p>
+</li><li><p>
+The return of floating-point values is thread-safe.
+</p>
+</li><li><p>
+The return of structure or class type values is incompatible across
+different compilers.
+</p>
+</li></ul>
+<p>
+The full calling convention, including the variations across compilers
+and target platforms, is as follows:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in right-to-left
+lexical order.
+</p>
+</li><li><p>
+Arguments of 8-bit and 16-bit integer type are promoted to 32-bit integers.
+In the cases of variable-argument functions where the
+type of the parameter is not specified, and of unprototyped functions,
+arguments of 32-bit floating point type are promoted to 64-bit floating
+point.
+</p>
+</li><li><p>
+The following processor registers are volatile:
+<code>EAX</code>
+<code>ECX</code>
+<code>EDX</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+<code>ES</code>
+<code>GS</code>
+</p>
+<p>
+With the extended-DOS-targetting DJGPP C/C++ compilers, so too are:
+<code>FS</code>
+</p>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>EBX</code>
+<code>ESI</code>
+<code>EDI</code>
+<code>EBP</code>
+<code>ESP</code>
+<code>CS</code>
+<code>DS</code>
+</p>
+<p>
+With the extended-DOS-targetting Watcom C/C++/Fortran
+compilers, so too are:
+<code>FS</code>
+</p>
+<p>
+With all OS/2-targetting and Win32-targetting compilers, so too are:
+<code>FS</code>
+</p>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>EFLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a simple <code>RET</code>
+instruction.  It is the caller's responsibility to pop the function
+arguments back off the call stack.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer, 32-bit integer,
+and near pointer return values will be stored by the called function in
+the <code>EAX</code> register.
+</p>
+</li><li><p>
+64-bit integer,
+and far pointer return values will be stored by the called function in the
+<code>EAX</code>/<code>EDX</code> register pair.
+</p>
+</li><li><p>
+Floating point return values will be stored by the called function in the
+<code>ST(0)</code> FPU register.
+</p>
+</li><li><p>
+For return values of structure or class type,
+there is wide incompatibility amongst compilers.  Some make the return
+thread-safe, by breaking compatibility with the 16-bit <code>cdecl</code>
+calling convention.  Some retain compatibility, at the expense of their
+32-bit <code>cdecl</code> calling convention not being thread-safe.  The
+ones that break compatibility don't all agree with one another on how to
+do so.
+</p>
+<p>
+Watcom C/C++/Fortran (32-bit compiler) simply does the same as for the
+16-bit <code>cdecl</code> calling convention:
+</p>
+<ul>
+<li><p>
+For return values of structure or class type,
+the called function is expected to allocate space for a value of that
+type, writing the return value to this address, and returning the address
+in the <code>EAX</code> register.
+</p>
+</li></ul>
+<p>
+Borland C/C++ for OS/2 and Borland C/C++ for DOS/Windows (32-bit compiler)
+both do the same (erroneous) thing that they do for
+<a href=3D"http://jdebp.info/FGA/function-calling-conventions.html#WIN32X86=
+">
+the 32-bit x86 <code>WINAPI</code> calling convention</a>
+(i.e.  Their <code>cdecl</code> calling conventions match their default
+calling conventions in this particular regard.):
+</p>
+<ul>
+<li><p>
+For return values of structure or class type that are "plain old data
+structures" 32 bits or smaller in size,
+the called function stores the structure/class value in the
+<code>EAX</code> register.
+</p>
+</li><li><p>
+For return values of structure or class type that are not "plain old data
+structures" or that are larger than 32 bits,
+the caller is expected to allocate space for a value of that type, passing
+a pointer to it as a hidden parameter, pushed onto the call stack after
+all other parameters.  The called function writes the return value to this
+address, and returns the address in the <code>EAX</code> register.
+</p>
+</li></ul>
+<p>
+Microsoft Visual C/C++ does the same as what it does for the 32-bit x86
+<code>WINAPI</code> calling convention and
+<a href=3D"http://jdebp.info/FGA/function-calling-conventions.html#Microsof=
+tFastcall">
+its own <code>Fastcall</code> calling convention</a>
+(i.e. It does the same across all three conventions.):
+</p>
+<ul>
+<li><p>
+For return values of structure or class type that are "plain old data
+structures" 32 bits or smaller in size,
+the called function stores the structure/class value in the
+<code>EAX</code> register.
+</p>
+<p>
+For return values of structure or class type that are "plain old data
+structures" 33 to 64 bits in size,
+the called function stores the structure/class value in the
+<code>EAX</code>/<code>EDX</code> register pair.
+</p>
+<p>
+For return values of structure or class type that are not "plain old data
+structures" or that are larger than 64 bits,
+the caller is expected to allocate space for a value of that type, passing
+a pointer to it as a hidden parameter, pushed onto the call stack after
+all other parameters.  The called function writes the return value to this
+address, and returns the address in the <code>EAX</code> register.
+</p>
+</li></ul>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#Optlink" title=3D"IBM's Optlink calling convention">
+<h3 class=3D"ruled" id=3D"Optlink" style=3D"clear:right;">
+IBM's <code>Optlink</code> calling convention
+</h3>
+
+<div class=3D"sidebar">
+<p>
+The <code>Optlink</code> calling convention is specified with:
+</p>
+<ul>
+<li><p><strong>IBM VisualAge for C/C++ for OS/2:</strong>
+<code>_Optlink</code> keyword and
+the <code>extern&nbsp;"Optlink"</code>
+linkage specifier
+</p>
+</li><li><p><strong>Watcom C/C++ (32-bit compiler):</strong>
+<code>__optlink</code> keyword (a.k.a. <code>_Optlink</code> keyword)
+</p>
+</li></ul>
+<p>
+This is the default calling convention for:
+</p>
+<ul>
+<li><p class=3D"compact">IBM VisualAge for C/C++ for OS/2</p>
+</li><li><p class=3D"compact">IBM VisualAge for C/C++ for Windows</p>
+</li><li><p class=3D"compact">IBM COBOL for Windows</p>
+</li></ul>
+</div>
+
+<p>
+The <code>Optlink</code> calling convention is the default calling
+convention used by several of IBM's x86 compilers =97 including
+VisualAge for C/C++ for OS/2, VisualAge for C/C++ for Windows, and COBOL
+for Windows.  It is a "go faster" variant of
+<a href=3D"http://jdebp.info/FGA/function-calling-conventions.html#APIENTRY=
+">
+the 32-bit OS/2 system API (<code>APIENTRY</code>) calling convention</a>,
+that places up to three integer and (near) pointer and up to four floating
+point arguments in CPU registers (but with the same space left for them on
+the stack as would be in <code>APIENTRY</code>).
+</p>
+<p>
+The full convention
+(<a href=3D"http://publib.boulder.ibm.com./infocenter/ratdevz/v7r5/topic/co=
+m.ibm.etools.cbl.win.doc/topics/rpsubw30.htm">documented
+by IBM for its COBOL for Windows compiler</a>)
+is as follows:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in right-to-left
+lexical order.
+</p>
+</li><li><p>
+Arguments of 8-bit and 16-bit integer types are promoted to 32-bit
+integers.
+In the cases of variable-argument functions where the
+type of the parameter is not specified, and of unprototyped functions,
+arguments of 32-bit floating point type are promoted to 64-bit
+floating point.
+</p>
+<p>
+The first three (32-bit) integer arguments are stored in, respectively, the
+<code>EAX</code>, <code>ECX</code>, and <code>EDX</code> registers.
+The first four floating point arguments are stored in, respectively, the
+<code>ST(0)</code>=96<code>ST(3)</code> registers.
+The caller also pushes dummy values onto the call stack for each of those
+arguments, to allow the called function to easily spill the argument
+values from registers to memory should it need to use the registers for
+other purposes.
+(Generally the calling code simply subtracts the sizes of the register
+arguments from <code>ESP</code> and doesn't bother touching the stack
+locations corresponding to those arguments.)
+</p>
+</li><li><p>
+The following processor registers are volatile:
+<code>EAX</code>
+<code>ECX</code>
+<code>EDX</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+</p>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>EBX</code>
+<code>ESI</code>
+<code>EDI</code>
+<code>EBP</code>
+<code>ESP</code>
+<code>CS</code>
+<code>DS</code>
+<code>ES</code>
+<code>FS</code>
+<code>GS</code>
+</p>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>EFLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a simple (near) <code>RET</code>
+instruction.  It is the caller's responsibility to pop the function
+arguments back off the call stack.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer, 32-bit integer,
+and 0:32 pointer return values will be stored by the called function in
+the <code>EAX</code> register.
+</p>
+</li><li><p>
+64-bit integer
+and 16:32 pointer return values will be stored by the called function in th=
+e
+<code>EAX</code>/<code>EDX</code> register pair.
+</p>
+</li><li><p>
+Floating point return values will be stored by the called function in the
+<code>ST(0)</code> FPU register.
+</p>
+</li><li><p>
+For return values of structure or class type, the caller is expected to
+allocate space for a value of that type, passing a pointer to it as a
+hidden parameter, pushed onto the call stack after all other parameters
+(and <em>not</em> treated as a normal parameter, that can be passed in a
+register).  The called function writes the return value to this address,
+and returns the address in the <code>EAX</code> register.
+</p>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#Watcall" title=3D"Watcom's Watcall calling conventions">
+<h3 class=3D"ruled" id=3D"Watcall" style=3D"clear:right;">
+Watcom's <code>Watcall</code> calling conventions
+</h3>
+
+<div class=3D"sidebar">
+<p>
+The <code>Watcall</code> calling convention is specified with:
+</p>
+<ul>
+<li><p><strong>Watcom C/C++:</strong>
+<code>__watcall</code> keyword
+</p>
+</li></ul>
+<p>
+This is the default calling convention for:
+</p>
+<ul>
+<li><p class=3D"compact">Watcom C/C++/Fortran</p>
+</li></ul>
+</div>
+
+<p>
+The <code>Watcall</code> calling convention is the default calling
+convention used by Watcom's x86 C, C++, and Fortran compilers.  It is, in
+fact, two different calling conventions.  The default calling convention
+used by the compiler, <em>and</em> the meaning of the
+<code>__watcall</code> keyword, vary according to whether the
+<code>-3r</code>/<code>-4r</code>/<code>-5r</code> or the
+<code>-3s</code>/<code>-4s</code>/<code>-5s</code> compiler options are
+used.  The <code>r</code> variants specify a <em>register-based</em>
+<code>Watcall</code> calling convention, and the <code>s</code> variants
+specify a <em>stack-based</em> <code>Watcall</code> calling convention.
+(The default, if no option is specified, is register-based.)
+</p>
+
+<p>
+The inability to specify the "other" <code>Watcall</code> calling
+convention with a keyword means that the C/C++ library headers declaring
+C/C++ library functions declare them with one of two calling conventions
+according to what command-line option was specified.  Watcom C, C++, and
+Fortran thus ship with two sets of runtime libraries, one compiled with
+the register-based <code>Watcall</code> calling convention and one
+compiled with the stack-based <code>Watcall</code> calling convention.
+</p>
+
+<p>
+The register-based <code>Watcall</code> calling convention is essentially
+a "go faster" version of the stack-based <code>Watcall</code> calling
+convention, that places up to four integer and (near) pointer arguments
+and (POD) structure/class type return values in CPU registers instead of
+on the stack or in memory.
+</p>
+
+<p>
+Both the register-based and the stack-based conventions come in 16-bit and
+32-bit flavours, analogous to each other but differing in how
+floating-point values are returned in non-FPU registers, whether
+<code>(E)DX</code> is used for return values, and whether (some) floating
+point arguments can be passed in registers.  Both also come in near and
+far forms, that differ solely in the distance attribute of the function.
+</p>
+
+<p>
+The following descriptions describe the actual calling convention, as
+employed by code compiled with the Watcom C/C++/Fortran compilers and by
+the code in their C/C++/Fortran run-time libraries.  Note that there are
+significant differences between these descriptions and what the OpenWatcom
+documentation states.  <em>The OpenWatcom documentation does not correctly
+describe the actual output generated by the compilers.</em> The following
+descriptions are based upon actual observations of generated code and
+inspection of the source code for the OpenWatcom 1.x compilers.
+</p>
+
+<p>
+Given that the descriptions are of what the run-time library code calling
+conventions are, the following descriptions <em>do not</em> take the
+<code>-zdp</code>,
+<code>-zdf</code>,
+<code>-zfp</code>,
+<code>-zff</code>,
+<code>-zgp</code>, and
+<code>-zgf</code>
+compiler options into account.  Although these options directly modify the
+effect of the <code>__watcall</code> keyword, and the compiler's default
+calling convention, they do not change what libraries are linked to, or
+the code in those libraries.  In fact, they will cause linkage to the C,
+C++, and Fortran run-time libraries to break, because they will alter how
+the header files effectively declare the run-time library functions (which
+are declared using the <code>__watcall</code> keyword), and thus how
+application code will generate calls to run-time library functions.
+</p>
+
+<p>
+Conversely, the <code>-r</code> compiler option <em>is</em> taken into
+account in the following, because it relates to a modification to the
+<code>Watcall</code> calling convention that <em>is</em> existent in
+run-time libraries.  This option causes the Watcom C/C++/Fortran version
+9, 10, and 11 compilers, and the OpenWatcom 1.x compilers, to revert to
+the same <code>Watcall</code> calling convention as used by the Watcom
+C/C++/Fortran version 8 compiler, whose run-time libraries are compiled to
+employ that particular calling convention.
+</p>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#Watcall16S" title=3D"Watcom's 16-bit stack-based Watcall calling=
+ convention">
+<h4 class=3D"ruled" id=3D"Watcall16S" style=3D"clear:right;">
+Watcom's 16-bit stack-based <code>Watcall</code> calling convention
+</h4>
+
+<p>
+The 16-bit stack-based <code>Watcall</code> calling convention is as follow=
+s:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in right-to-left
+lexical order.
+</p>
+</li><li><p>
+Arguments of 8-bit integer type are promoted to 16-bit integers.
+In the cases of variable-argument functions where the
+type of the parameter is not specified, and of unprototyped functions,
+arguments of 32-bit floating point type are promoted to 64-bit floating
+point.
+</p>
+</li><li><p>
+The following processor registers are volatile:
+<code>AX</code>
+<code>CX</code>
+<code>DX</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+</p>
+<p></p>
+In addition, and if the <code>-r</code> option is not in effect, the
+following processor registers are volatile, according to memory model,
+target platform, language, and (even!) host platform:
+<p></p>
+<table frame=3D"border" border=3D"4" rules=3D"all" width=3D"100%">
+<thead>
+<tr>
+	<th rowspan=3D"2">Memory model</th>
+	<th colspan=3D"2" width=3D"24%">32-bit C compiler (with <code>__far16</cod=
+e>)</th>
+	<th colspan=3D"2" width=3D"24%">16-bit C compiler</th>
+	<th colspan=3D"2" width=3D"24%">32-bit C++ compiler (with <code>__far16</c=
+ode>)</th>
+	<th colspan=3D"2" width=3D"24%">16-bit C++ compiler</th>
+</tr>
+<tr>
+	<th>targetting 32-bit extended Win16</th>
+	<th>all other targets</th>
+	<th>targetting Win16</th>
+	<th>all other targets</th>
+	<th>targetting 32-bit extended Win16</th>
+	<th>all other targets</th>
+	<th>targetting Win16</th>
+	<th>all other targets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+	<td>Flat/Tiny</td>
+	<td>
+		<code>GS</code>
+		<code>FS</code>
+	</td>
+	<td>
+		<code>GS</code>
+		<code>FS</code>
+	</td>
+	<td>
+		None
+	</td>
+	<td>
+		None
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Small</td>
+	<td>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Compact</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Medium</td>
+	<td>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Large</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Huge</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+</tr>
+</tbody>
+</table>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>BX</code>
+<code>SI</code>
+<code>DI</code>
+<code>BP</code>
+<code>SP</code>
+<code>CS</code>
+</p>
+<p>
+The following processor registers are also conditionally non-volatile:
+</p>
+<ul>
+<li><p>If the <code>-r</code> option is in effect:
+<code>DS</code>
+<code>ES</code>
+<code>FS</code>
+<code>GS</code>
+</p>
+</li><li><p>
+Otherwise, according to memory model, target platform, language, and
+(even!) host platform:
+</p>
+<table frame=3D"border" border=3D"4" rules=3D"all" width=3D"100%">
+<thead>
+<tr>
+	<th rowspan=3D"2">Memory model</th>
+	<th colspan=3D"2" width=3D"24%">32-bit C compiler (with <code>__far16</cod=
+e>)</th>
+	<th colspan=3D"2" width=3D"24%">16-bit C compiler</th>
+	<th colspan=3D"2" width=3D"24%">32-bit C++ compiler (with <code>__far16</c=
+ode>)</th>
+	<th colspan=3D"2" width=3D"24%">16-bit C++ compiler</th>
+</tr>
+<tr>
+	<th>targetting 32-bit extended Win16</th>
+	<th>all other targets</th>
+	<th>targetting Win16</th>
+	<th>all other targets</th>
+	<th>targetting 32-bit extended Win16</th>
+	<th>all other targets</th>
+	<th>targetting Win16</th>
+	<th>all other targets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+	<td>Flat/Tiny</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Small</td>
+	<td>
+		<code>DS</code>
+	</td>
+	<td>
+		<code>DS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Compact</td>
+	<td>
+		None
+	</td>
+	<td>
+		None
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Medium</td>
+	<td>
+		<code>DS</code>
+	</td>
+	<td>
+		<code>DS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Large</td>
+	<td>
+		None
+	</td>
+	<td>
+		None
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Huge</td>
+	<td>
+		None
+	</td>
+	<td>
+		None
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+</tr>
+</tbody>
+</table>
+</li></ul>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>FLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a simple (near or far) <code>RET</code>
+instruction.  It is the caller's responsibility to pop the function
+arguments back off the call stack.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer,
+and 0:16 pointer return values will be stored by the called function in
+the <code>AX</code> register.
+</p>
+</li><li><p>
+64-bit integer, 32-bit integer,
+and 16:16 pointer return values will be stored by the called function in th=
+e
+<code>AX</code>/<code>DX</code> register pair.
+</p>
+</li><li>
+<p>If the <code>-fpi</code> or <code>-fpi87</code> compiler option is in ef=
+fect:</p>
+<ul>
+<li><p>
+Floating point return values will be stored by the called function in the
+<code>ST(0)</code> FPU register.
+</p>
+</li></ul>
+<p>If the <code>-fpc</code> compiler option is in effect:</p>
+<ul>
+<li><p>
+32-bit floating point return values are stored by the called function in th=
+e
+<code>AX</code>/<code>DX</code> register pair.
+64-bit floating point return values are stored by the called function in th=
+e
+<code>AX</code>/<code>BX</code>/<code>CX</code>/<code>DX</code> register qu=
+adruplet.
+It is not possible to return 80-bit floating point values.
+</p>
+</li><li><p>
+The FPU registers are not used to return values.
+</p>
+</li></ul>
+</li><li><p>
+For return values of structure or class type,
+the caller is expected to allocate space for a value of that type, passing
+a pointer to it as a hidden parameter, pushed onto the call stack after
+all other parameters.  The called function writes the return value to this
+address, and returns the address in the <code>AX</code> register.
+</p>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#Watcall16R" title=3D"Watcom's 16-bit register-based Watcall call=
+ing convention">
+<h4 class=3D"ruled" id=3D"Watcall16R" style=3D"clear:right;">
+Watcom's 16-bit register-based <code>Watcall</code> calling convention
+</h4>
+
+<p>
+The 16-bit register-based <code>Watcall</code> calling convention is as fol=
+lows:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in right-to-left
+lexical order.
+</p>
+</li><li><p>
+Arguments of 8-bit integer type are promoted to 16-bit integers.
+In the cases of variable-argument functions where the
+type of the parameter is not specified, and of unprototyped functions,
+arguments of 32-bit floating point type are promoted to 64-bit floating
+point.
+</p>
+</li><li><p>
+The first four (16-bit) integer or 0:16 pointer arguments are stored in,
+respectively, the <code>AX</code>, <code>BX</code>, <code>CX</code>,
+and <code>DX</code> registers.  Register allocation proceeds in
+left-to-right lexical order and stops at the first argument enountered
+that is not a (16-bit) integer or 0:16 pointer.
+</p>
+<p>
+The caller <em>does not</em> push dummy values onto the call stack for any
+of those arguments.  If the called function needs to spill the argument
+values from these registers to memory, it has to supply space itself.
+</p>
+</li><li><p>
+If the <code>-r</code> option is in effect, no processor registers are
+volatile, not even the ones used by the caller to store parameter values.
+Otherwise, the following processor registers are volatile, according to
+memory model, target platform, language, and (even!) host platform:
+</p>
+<table frame=3D"border" border=3D"4" rules=3D"all" width=3D"100%">
+<thead>
+<tr>
+	<th rowspan=3D"2">Memory model</th>
+	<th colspan=3D"2" width=3D"24%">32-bit C compiler (with <code>__far16</cod=
+e>)</th>
+	<th colspan=3D"2" width=3D"24%">16-bit C compiler</th>
+	<th colspan=3D"2" width=3D"24%">32-bit C++ compiler (with <code>__far16</c=
+ode>)</th>
+	<th colspan=3D"2" width=3D"24%">16-bit C++ compiler</th>
+</tr>
+<tr>
+	<th>targetting 32-bit extended Win16</th>
+	<th>all other targets</th>
+	<th>targetting Win16</th>
+	<th>all other targets</th>
+	<th>targetting 32-bit extended Win16</th>
+	<th>all other targets</th>
+	<th>targetting Win16</th>
+	<th>all other targets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+	<td>Flat/Tiny</td>
+	<td>
+		<code>GS</code>
+		<code>FS</code>
+	</td>
+	<td>
+		<code>GS</code>
+		<code>FS</code>
+	</td>
+	<td>
+		None
+	</td>
+	<td>
+		None
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Small</td>
+	<td>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Compact</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Medium</td>
+	<td>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Large</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Huge</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+</tr>
+</tbody>
+</table>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>AX</code>
+<code>BX</code>
+<code>CX</code>
+<code>DX</code>
+<code>SI</code>
+<code>DI</code>
+<code>BP</code>
+<code>SP</code>
+<code>CS</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+</p>
+<p>
+The following processor registers are also conditionally non-volatile:
+</p>
+<ul>
+<li><p>If the <code>-r</code> option is in effect:
+<code>DS</code>
+<code>ES</code>
+<code>FS</code>
+<code>GS</code>
+</p>
+</li><li><p>
+Otherwise, according to memory model, target platform, language, and
+(even!) host platform:
+</p>
+<table frame=3D"border" border=3D"4" rules=3D"all" width=3D"100%">
+<thead>
+<tr>
+	<th rowspan=3D"2">Memory model</th>
+	<th colspan=3D"2" width=3D"24%">32-bit C compiler (with <code>__far16</cod=
+e>)</th>
+	<th colspan=3D"2" width=3D"24%">16-bit C compiler</th>
+	<th colspan=3D"2" width=3D"24%">32-bit C++ compiler (with <code>__far16</c=
+ode>)</th>
+	<th colspan=3D"2" width=3D"24%">16-bit C++ compiler</th>
+</tr>
+<tr>
+	<th>targetting 32-bit extended Win16</th>
+	<th>all other targets</th>
+	<th>targetting Win16</th>
+	<th>all other targets</th>
+	<th>targetting 32-bit extended Win16</th>
+	<th>all other targets</th>
+	<th>targetting Win16</th>
+	<th>all other targets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+	<td>Flat/Tiny</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Small</td>
+	<td>
+		<code>DS</code>
+	</td>
+	<td>
+		<code>DS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Compact</td>
+	<td>
+		None
+	</td>
+	<td>
+		None
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Medium</td>
+	<td>
+		<code>DS</code>
+	</td>
+	<td>
+		<code>DS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Large</td>
+	<td>
+		None
+	</td>
+	<td>
+		None
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Huge</td>
+	<td>
+		None
+	</td>
+	<td>
+		None
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+</tr>
+</tbody>
+</table>
+</li></ul>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>FLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a simple (near or far) <code>RET</code>
+instruction.  It is the caller's responsibility to pop the function
+arguments back off the call stack.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer,
+and 0:16 pointer return values will be stored by the called function in
+the <code>AX</code> register.
+</p>
+</li><li><p>
+64-bit integer, 32-bit integer,
+and 16:16 pointer return values will be stored by the called function in th=
+e
+<code>AX</code>/<code>DX</code> register pair.
+</p>
+</li><li>
+<p>If the <code>-fpi</code> or <code>-fpi87</code> compiler option is in ef=
+fect:</p>
+<ul>
+<li><p>
+Floating point return values will be stored by the called function in the
+<code>ST(0)</code> FPU register.
+</p>
+</li></ul>
+<p>If the <code>-fpc</code> compiler option is in effect:</p>
+<ul>
+<li><p>
+32-bit floating point return values are stored by the called function in th=
+e
+<code>AX</code>/<code>DX</code> register pair.
+64-bit floating point return values are stored by the called function in th=
+e
+<code>AX</code>/<code>BX</code>/<code>CX</code>/<code>DX</code> register qu=
+adruplet.
+It is not possible to return 80-bit floating point values.
+</p>
+</li><li><p>
+The FPU registers are not used to return values.
+</p>
+</li></ul>
+</li><li><p>
+For return values of structure or class type that are "plain old data
+structures" 16 bits or smaller in size,
+the called function stores the structure/class value in the
+<code>AX</code> register.
+</p>
+<p>
+For return values of structure or class type that are "plain old data
+structures" 17 to 32 bits in size,
+the called function stores the structure/class value in the
+<code>AX</code>/<code>DX</code> register pair.
+</p>
+<p>
+For return values of structure or class type that are not "plain old data
+structures" or that are larger than 32 bits,
+the caller is expected to allocate space for a value of that type, passing
+a pointer to it as a hidden parameter, pushed onto the call stack after
+all other parameters.  The called function writes the return value to this
+address, and returns the address in the <code>AX</code> register.
+</p>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#Watcall32S" title=3D"Watcom's 32-bit stack-based Watcall calling=
+ convention">
+<h4 class=3D"ruled" id=3D"Watcall32S" style=3D"clear:right;">
+Watcom's 32-bit stack-based <code>Watcall</code> calling convention
+</h4>
+
+<p>
+The 32-bit stack-based <code>Watcall</code> calling convention is as follow=
+s:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in right-to-left
+lexical order.
+</p>
+</li><li><p>
+Arguments of 8-bit and 16-bit integer type are promoted to 32-bit integers.
+In the cases of variable-argument functions where the
+type of the parameter is not specified, and of unprototyped functions,
+arguments of 32-bit floating point type are promoted to 64-bit floating
+point.
+</p>
+</li><li><p>
+The following processor registers are volatile:
+<code>EAX</code>
+<code>ECX</code>
+<code>EDX</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+</p>
+<p>
+In addition, and if the <code>-r</code> option is not in effect, the
+following processor registers are volatile, according to memory model,
+target platform, and (even!) host platform:
+</p>
+<table frame=3D"border" border=3D"4" rules=3D"all" width=3D"100%">
+<thead>
+<tr>
+	<th rowspan=3D"2">Memory model</th>
+	<th colspan=3D"2" width=3D"48%">C compiler (32-bit only)</th>
+	<th colspan=3D"2" width=3D"48%">C++ compiler (32-bit only)</th>
+</tr>
+<tr>
+	<th>targetting 32-bit extended Win16</th>
+	<th>all other targets</th>
+	<th>targetting 32-bit extended Win16</th>
+	<th>all other targets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+	<td>Flat/Tiny</td>
+	<td>
+		<code>GS</code>
+		<code>FS</code>
+	</td>
+	<td>
+		<code>GS</code>
+		<code>FS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Small</td>
+	<td>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Compact</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Medium</td>
+	<td>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Large</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Huge</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>GS</code>
+	</td>
+</tr>
+</tbody>
+</table>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>EBX</code>
+<code>ESI</code>
+<code>EDI</code>
+<code>EBP</code>
+<code>ESP</code>
+<code>CS</code>
+</p>
+<p>
+The following processor registers are also conditionally non-volatile:
+</p>
+<ul>
+<li><p>If the <code>-r</code> option is in effect:
+<code>DS</code>
+<code>ES</code>
+<code>FS</code>
+<code>GS</code>
+</p>
+</li><li><p>
+Otherwise, according to memory model, target platform, and (even!) host
+platform:
+</p>
+<table frame=3D"border" border=3D"4" rules=3D"all" width=3D"100%">
+<thead>
+<tr>
+	<th rowspan=3D"2">Memory model</th>
+	<th colspan=3D"2" width=3D"48%">C compiler (32-bit only)</th>
+	<th colspan=3D"2" width=3D"48%">C++ compiler (32-bit only)</th>
+</tr>
+<tr>
+	<th>targetting 32-bit extended Win16</th>
+	<th>all other targets</th>
+	<th>targetting 32-bit extended Win16</th>
+	<th>all other targets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+	<td>Flat/Tiny</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Small</td>
+	<td>
+		<code>DS</code>
+	</td>
+	<td>
+		<code>DS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Compact</td>
+	<td>
+		None
+	</td>
+	<td>
+		None
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Medium</td>
+	<td>
+		<code>DS</code>
+	</td>
+	<td>
+		<code>DS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Large</td>
+	<td>
+		None
+	</td>
+	<td>
+		None
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Huge</td>
+	<td>
+		None
+	</td>
+	<td>
+		None
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>ES</code>
+	</td>
+</tr>
+</tbody>
+</table>
+</li></ul>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>EFLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a simple (near or far) <code>RET</code>
+instruction.  It is the caller's responsibility to pop the function
+arguments back off the call stack.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer, 32-bit integer,
+and 0:32 pointer return values will be stored by the called function in
+the <code>EAX</code> register.
+</p>
+</li><li><p>
+64-bit integer,
+and 16:32 pointer return values will be stored by the called function in th=
+e
+<code>EAX</code>/<code>EDX</code> register pair.
+</p>
+</li><li>
+<p>If the <code>-fpi</code> or <code>-fpi87</code> compiler option is in ef=
+fect:</p>
+<ul>
+<li><p>
+Floating point return values will be stored by the called function in the
+<code>ST(0)</code> FPU register.
+</p>
+</li></ul>
+<p>If the <code>-fpc</code> compiler option is in effect:</p>
+<ul>
+<li><p>
+32-bit floating point return values are stored by the called function in th=
+e
+<code>EAX</code> register.
+64-bit floating point return values are stored by the called function in th=
+e
+<code>EAX</code>/<code>EDX</code> register pair.
+It is not possible to return 80-bit floating point values.
+</p>
+</li><li><p>
+The FPU registers are not used to return values.
+</p>
+</li></ul>
+</li><li><p>
+For return values of structure or class type,
+the caller is expected to allocate space for a value of that type, passing
+a pointer to it as a hidden parameter, pushed onto the call stack after
+all other parameters.  The called function writes the return value to this
+address, and returns the address in the <code>EAX</code> register.
+</p>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#Watcall32R" title=3D"Watcom's 32-bit register-based Watcall call=
+ing convention">
+<h4 class=3D"ruled" id=3D"Watcall32R" style=3D"clear:right;">
+Watcom's 32-bit register-based <code>Watcall</code> calling convention
+</h4>
+
+<p>
+The 32-bit register-based <code>Watcall</code> calling convention is as fol=
+lows:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in right-to-left
+lexical order.
+</p>
+</li><li><p>
+Arguments of 8-bit and 16-bit integer type are promoted to 32-bit integers.
+In the cases of variable-argument functions where the
+type of the parameter is not specified, and of unprototyped functions,
+arguments of 32-bit floating point type are promoted to 64-bit floating
+point.
+</p>
+</li><li><p>
+The first four (32-bit) integer, 32-bit floating point, or 0:32 pointer
+arguments are stored in, respectively, the <code>EAX</code>,
+<code>EBX</code>, <code>ECX</code>, and <code>EDX</code> registers.
+Register assignment proceeds in left-to-right lexical order and stops at
+the first argument enountered that is not a (32-bit) integer32-bit
+floating point value, or 0:32 pointer.
+</p>
+<p>
+The caller <em>does not</em> push dummy values onto the call stack for any
+of those arguments.  If the called function needs to spill the argument
+values from these registers to memory, it has to supply space itself.
+</p>
+</li><li><p>
+If the <code>-r</code> option is in effect, no processor registers are
+volatile, not even the ones used by the caller to store parameter values.
+</p>
+<p>
+Otherwise, the following processor registers are volatile, according to
+memory model, target platform, and (even!) host platform:
+</p>
+<table frame=3D"border" border=3D"4" rules=3D"all" width=3D"100%">
+<thead>
+<tr>
+	<th rowspan=3D"2">Memory model</th>
+	<th colspan=3D"2" width=3D"48%">C compiler (32-bit only)</th>
+	<th colspan=3D"2" width=3D"48%">C++ compiler (32-bit only)</th>
+</tr>
+<tr>
+	<th>targetting 32-bit extended Win16</th>
+	<th>all other targets</th>
+	<th>targetting 32-bit extended Win16</th>
+	<th>all other targets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+	<td>Flat/Tiny</td>
+	<td>
+		<code>GS</code>
+		<code>FS</code>
+	</td>
+	<td>
+		<code>GS</code>
+		<code>FS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Small</td>
+	<td>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Compact</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Medium</td>
+	<td>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Large</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>GS</code>
+	</td>
+</tr>
+<tr>
+	<td>Huge</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>FS</code>
+		<code>GS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>GS</code>
+	</td>
+</tr>
+</tbody>
+</table>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>EAX</code>
+<code>EBX</code>
+<code>ECX</code>
+<code>EDX</code>
+<code>ESI</code>
+<code>EDI</code>
+<code>EBP</code>
+<code>ESP</code>
+<code>CS</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+</p>
+<p>
+The following processor registers are also conditionally non-volatile:
+</p>
+<ul>
+<li><p>If the <code>-r</code> option is in effect:
+<code>DS</code>
+<code>ES</code>
+<code>FS</code>
+<code>GS</code>
+</p>
+</li><li><p>
+Otherwise, according to memory model, target platform, and (even!) host
+platform:
+</p>
+<table frame=3D"border" border=3D"4" rules=3D"all" width=3D"100%">
+<thead>
+<tr>
+	<th rowspan=3D"2">Memory model</th>
+	<th colspan=3D"2" width=3D"48%">C compiler (32-bit only)</th>
+	<th colspan=3D"2" width=3D"48%">C++ compiler (32-bit only)</th>
+</tr>
+<tr>
+	<th>targetting 32-bit extended Win16</th>
+	<th>all other targets</th>
+	<th>targetting 32-bit extended Win16</th>
+	<th>all other targets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+	<td>Flat/Tiny</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Small</td>
+	<td>
+		<code>DS</code>
+	</td>
+	<td>
+		<code>DS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Compact</td>
+	<td>
+		None
+	</td>
+	<td>
+		None
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Medium</td>
+	<td>
+		<code>DS</code>
+	</td>
+	<td>
+		<code>DS</code>
+	</td>
+	<td>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>DS</code>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Large</td>
+	<td>
+		None
+	</td>
+	<td>
+		None
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>ES</code>
+	</td>
+</tr>
+<tr>
+	<td>Huge</td>
+	<td>
+		None
+	</td>
+	<td>
+		None
+	</td>
+	<td>
+		<code>ES</code>
+	</td>
+	<td>
+		<code>FS</code>
+		<code>ES</code>
+	</td>
+</tr>
+</tbody>
+</table>
+</li></ul>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>EFLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a simple (near or far) <code>RET</code>
+instruction.  It is the caller's responsibility to pop the function
+arguments back off the call stack.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer, 32-bit integer,
+and 0:32 pointer return values will be stored by the called function in
+the <code>EAX</code> register.
+</p>
+</li><li><p>
+64-bit integer,
+and 16:32 pointer return values will be stored by the called function in th=
+e
+<code>EAX</code>/<code>EDX</code> register pair.
+</p>
+</li><li>
+<p>If the <code>-fpi</code> or <code>-fpi87</code> compiler option is in ef=
+fect:</p>
+<ul>
+<li><p>
+Floating point return values will be stored by the called function in the
+<code>ST(0)</code> FPU register.
+</p>
+</li></ul>
+<p>If the <code>-fpc</code> compiler option is in effect:</p>
+<ul>
+<li><p>
+32-bit floating point return values are stored by the called function in th=
+e
+<code>EAX</code> register.
+64-bit floating point return values are stored by the called function in th=
+e
+<code>EAX</code>/<code>EDX</code> register pair.
+It is not possible to return 80-bit floating point values.
+</p>
+</li><li><p>
+The FPU registers are not used to return values.
+</p>
+</li></ul>
+</li><li><p>
+For return values of structure or class type that are "plain old data
+structures" 32 bits or smaller in size,
+the called function stores the structure/class value in the
+<code>EAX</code> register.
+</p>
+<p>
+For return values of structure or class type that are not "plain old data
+structures" or that are larger than 32 bits,
+the caller is expected to allocate space for a value of that type, passing
+a pointer to it as a hidden parameter, pushed onto the call stack after
+all other parameters.  The called function writes the return value to this
+address, and returns the address in the <code>EAX</code> register.
+</p>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#MicrosoftFastcall" title=3D"Microsoft's Fastcall calling convent=
+ions">
+<h3 class=3D"ruled" id=3D"MicrosoftFastcall" style=3D"clear:right;">
+Microsoft's <code>Fastcall</code> calling convention
+</h3>
+
+<div class=3D"sidebar">
+<p>
+The <code>Fastcall</code> calling convention is specified with:
+</p>
+<ul>
+<li><p><strong>Microsoft Visual C/C++:</strong>
+<code>__fastcall</code> keyword
+</p>
+</li><li><p><strong>Watcom C/C++:</strong>
+<code>__fastcall</code> keyword (a.k.a. <code>_fastcall</code>
+and <code>fastcall</code>)
+</p>
+</li></ul>
+</div>
+
+<p>
+Microsoft's x86 <code>fastcall</code> calling convention is a "go faster"
+variant of
+<a href=3D"http://jdebp.info/FGA/function-calling-conventions.html#WIN32X86=
+">
+the 32-bit x86 Win32 system API calling convention</a>,
+that places up to two integer and (near) pointer arguments in CPU
+registers instead of on the stack or in memory.  (The 32-bit x86
+<code>WINAPI</code> calling convention already returns small POD
+structures in registers.)
+</p>
+<p>
+It is documented by Microsoft in
+<a href=3D"http://msdn.microsoft.com/en-us/library/6xa169sk.aspx">
+the Visual C/C++ Programming Guide</a>,
+and is as follows:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in right-to-left
+lexical order.
+</p>
+</li><li><p>
+Arguments of 8-bit and 16-bit integer types are promoted to 32-bit
+integers.
+In the cases of variable-argument functions where the
+type of the parameter is not specified, and of unprototyped functions,
+arguments of 32-bit floating point type are promoted to 64-bit
+floating point.
+</p>
+</li><li><p>
+The first two (32-bit) integer or 0:32 pointer arguments are stored in,
+respectively, the <code>ECX</code>, and <code>EDX</code> registers.
+Register allocation proceeds in left-to-right lexical order and stops at
+the first argument enountered that is not a (32-bit) integer or 0:32
+pointer.
+</p>
+<p>
+The caller <em>does not</em> push dummy values onto the call stack for any
+of those arguments.  If the called function needs to spill the argument
+values from these registers to memory, it has to supply space itself.
+</p>
+</li><li><p>
+The following processor registers are volatile:
+<code>EAX</code>
+<code>ECX</code>
+<code>EDX</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+</p>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>EBX</code>
+<code>ESI</code>
+<code>EDI</code>
+<code>EBP</code>
+<code>ESP</code> (see below)
+<code>CS</code>
+<code>DS</code>
+<code>ES</code>
+<code>FS</code>
+<code>GS</code>
+</p>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>EFLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a (near) <code>RET</code>&nbsp;<i>n</i>
+instruction, popping the near return address and <i>n</i> additional bytes
+off the stack as it returns.  So whilst non-volatile register
+<code>ESP</code> won't, strictly speaking, have its value exactly preserved
+across a call, it will be changed by a fixed amount relative to the value
+that it had upon entry.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer, 32-bit integer,
+and 0:32 pointer return values will be stored by the called function in
+the <code>EAX</code> register.
+</p>
+</li><li><p>
+64-bit integer
+and 16:32 pointer return values will be stored by the called function in
+the <code>EAX</code>/<code>EDX</code> register pair.
+</p>
+</li><li><p>
+Floating point return values will be stored by the called function in the
+<code>ST(0)</code> FPU register.
+</p>
+</li><li><p>
+For return values of structure or class type that are "plain old data
+structures" 32 bits or smaller in size,
+the called function stores the structure/class value in the
+<code>EAX</code> register.
+</p>
+<p>
+For return values of structure or class type that are "plain old data
+structures" 33 to 64 bits in size,
+the called function stores the structure/class value in the
+<code>EAX</code>/<code>EDX</code> register pair.
+</p>
+<p>
+For return values of structure or class type that are not "plain old data
+structures" or that are larger than 32 bits,
+the caller is expected to allocate space for a value of that type, passing
+a pointer to it as a hidden parameter, pushed onto the call stack after
+all other parameters.  The called function writes the return value to this
+address, and returns the address in the <code>EAX</code> register.
+</p>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#BorlandRegister" title=3D"Borland's Register calling conventions=
+">
+<h3 class=3D"ruled" id=3D"BorlandRegister" style=3D"clear:right;">
+Borland's Register calling conventions
+</h3>
+
+<div class=3D"sidebar">
+<p>
+The Borland Register calling convention is specified with:
+</p>
+<ul>
+<li><p><strong>Borland C/C++ for DOS/Windows:</strong>
+<code>__fastcall</code> keyword
+</p>
+</li><li><p><strong>Borland C/C++ for OS/2:</strong>
+<code>__fastcall</code> keyword
+</p>
+</li></ul>
+<p>
+This is the default calling convention for:
+</p>
+<ul>
+<li><p class=3D"compact">Borland Delphi 2.0</p>
+</li></ul>
+</div>
+
+<p>
+Borland's x86 Register calling conventions are "go faster" variants of its
+own
+<a href=3D"http://jdebp.info/FGA/function-calling-conventions.html#cdecl">
+<code>cdecl</code> calling conventions</a>,
+that place up to three integer and (near) pointer arguments in CPU
+registers instead of on the stack or in memory.
+</p>
+<p>
+What combinations of registers are used and what lexical order the
+arguments are assigned to registers are <em>undocumented and not
+guaranteed</em>, not even from version to version of Borland's own
+compilers.  Therefore:
+</p>
+<ul>
+<li><p>
+It is not possible to mix functions using Borland's Register calling
+convention with code written in any other language, since it is not
+possible to specify exactly what Borland's Register calling convention is.
+</p>
+</li><li><p>
+It is not possible to safely mix functions using Borland's Register
+calling convention with code compiled with other compilers,
+because even with compilers such as Watcom C/C++ that are capable of
+employing user-defined calling conventions, it is not possible to specify
+exactly what Borland's Register calling convention is.
+</p>
+</li><li><p>
+It is not possible to safely mix functions using Borland's Register
+calling convention with code compiled even with different versions of
+Borland's own compilers.
+</p>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#BorlandRegister16" title=3D"Borland's 16-bit Register calling co=
+nvention">
+<h4 class=3D"ruled" id=3D"BorlandRegister16" style=3D"clear:right;">
+Borland's 16-bit Register calling convention
+</h4>
+
+<p>
+Borland's 16-bit Register calling convention is documented (to an extent)
+by Borland in its
+<a href=3D"http://bitsavers.org./pdf/borland/Borland_C%2B%2B_Version_3.1_Us=
+ers_Guide_1992.pdf">
+Borland C/C++ version 3.1 for DOS/Windows User Guide</a>,
+in
+Appendix A. (The following fills in some of the missing parts from
+Borland's 16-bit <code>cdecl</code> calling convention.)  That
+documentation was dropped from its
+<a href=3D"http://godfolder.com./Computer%20Tutorials/PROGRAMMING/borland%2=
+0books/BC_USER.PDF">
+Borland C/C++ version 4.0 for DOS/Windows User Guide</a>.
+</p>
+<p>
+It is as follows:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in right-to-left
+lexical order.
+</p>
+</li><li><p>
+Arguments of 8-bit integer type are promoted to 16-bit integers.
+In the cases of variable-argument functions where the
+type of the parameter is not specified, and of unprototyped functions,
+arguments of 32-bit floating point type are promoted to 64-bit floating
+point.
+</p>
+</li><li><p>
+Any 8-bit integer, 16-bit integer, 32-bit integer, or 0:16 pointer
+arguments are stored, if possible, in some combination of the
+<code>AX</code>, <code>BX</code>, and <code>DX</code> registers:
+</p>
+<ul>
+<li><p>
+8-bit integers, 16-bit integers, and 0:16 pointers are stored in any of
+<code>AX</code>, <code>BX</code>, and <code>DX</code>, in an
+unspecified lexical order and for an unspecified number of arguments.
+</p>
+</li><li><p>
+32-bit integers are stored in the <code>AX</code>/<code>DX</code> register
+pair.  This obviously precludes the use of both of these registers for
+8-bit integers, 16-bit integers, and 0:16 pointers.
+</p>
+</li></ul>
+<p>
+The caller <em>does not</em> push dummy values onto the call stack for any
+of those arguments.  If the called function needs to spill the argument
+values from these registers to memory, it has to supply space itself.
+</p>
+</li><li><p>
+The following processor registers are volatile:
+<code>AX</code>
+<code>BX</code>
+<code>CX</code>
+<code>DX</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+<code>ES</code>
+</p>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>SI</code>
+<code>DI</code>
+<code>BP</code>
+<code>SP</code>
+<code>CS</code>
+<code>DS</code>
+<code>FS</code>
+<code>GS</code>
+</p>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>FLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a simple <code>RET</code>
+instruction.  It is the caller's responsibility to pop the function
+arguments back off the call stack.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer,
+and near pointer return values will be stored by the called function in
+the <code>AX</code> register.
+</p>
+</li><li><p>
+64-bit integer, 32-bit integer,
+and far pointer return values will be stored by the called function in the
+<code>AX</code>/<code>DX</code> register pair.
+</p>
+</li><li><p>
+The FPU registers are not used to return values.
+</p>
+</li><li><p>
+For return values of structure or class type, or of floating-point type,
+the called function is expected to allocate space for a value of that
+type, writing the return value to this address, and returning the address
+in the <code>AX</code> register.
+</p>
+<p>
+Because the called function cannot use the call stack for this, since the
+call stack pointer is restored by the caller after function exit, and
+because it cannot use the heap either, it must use a fixed-address portion
+of static non-constant data storage for such structure values.  This makes
+the 16-bit Register calling convention inherently not
+thread-safe when it comes to returning values of structure, class, or
+floating-point type.
+</p>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#BorlandRegister32" title=3D"Borland's 32-bit Register calling co=
+nvention">
+<h4 class=3D"ruled" id=3D"BorlandRegister32" style=3D"clear:right;">
+Borland's 32-bit Register calling convention
+</h4>
+
+<p>
+Borland's 32-bit Register calling convention is hardly documented at all
+in its Borland C/C++ version 4.0 for DOS/Windows User Guide.  It is,
+however, more fully albeit still incompletely documented in its Borland
+C/C++ version 2.0 for OS/2 User Guide, in appendix A. (The following fills
+in some of the missing parts from Borland's 32-bit <code>cdecl</code>
+calling convention.)
+</p>
+<p>
+It is as follows:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in right-to-left
+lexical order.
+</p>
+</li><li><p>
+Arguments of 8-bit and 16-bit integer type are promoted to 32-bit integers.
+In the cases of variable-argument functions where the
+type of the parameter is not specified, and of unprototyped functions,
+arguments of 32-bit floating point type are promoted to 64-bit floating
+point.
+</p>
+</li><li><p>
+Any 8-bit integer, 16-bit integer, 32-bit integer, or 0:32 pointer
+arguments are stored, if possible, in some combination of the
+<code>EAX</code>, <code>EBX</code>, and <code>EDX</code> registers, in an
+unspecified lexical order and for an unspecified number of arguments.
+</p>
+<p>
+The caller <em>does not</em> push dummy values onto the call stack for any
+of those arguments.  If the called function needs to spill the argument
+values from these registers to memory, it has to supply space itself.
+</p>
+</li><li><p>
+The following processor registers are volatile:
+<code>EAX</code>
+<code>EBX</code>
+<code>ECX</code>
+<code>EDX</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+<code>ES</code>
+</p>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>ESI</code>
+<code>EDI</code>
+<code>EBP</code>
+<code>ESP</code>
+<code>CS</code>
+<code>DS</code>
+<code>FS</code>
+<code>GS</code>
+</p>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>EFLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a simple <code>RET</code>
+instruction.  It is the caller's responsibility to pop the function
+arguments back off the call stack.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer, 32-bit integer,
+and near pointer return values will be stored by the called function in
+the <code>EAX</code> register.
+</p>
+</li><li><p>
+64-bit integer,
+and far pointer return values will be stored by the called function in the
+<code>EAX</code>/<code>EDX</code> register pair.
+</p>
+</li><li><p>
+Floating point return values will be stored by the called function in the
+<code>ST(0)</code> FPU register.
+</p>
+</li><li><p>
+For return values of structure or class type that are "plain old data
+structures" 32 bits or smaller in size,
+the called function stores the structure/class value in the
+<code>EAX</code> register.
+</p>
+<p>
+For return values of structure or class type that are not "plain old data
+structures" or that are larger than 32 bits,
+the caller is expected to allocate space for a value of that type, passing
+a pointer to it as a hidden parameter, pushed onto the call stack after
+all other parameters.  The called function writes the return value to this
+address, and returns the address in the <code>EAX</code> register.
+</p>
+</li></ul>
+
+<link rel=3D"Section" href=3D"http://jdebp.info/FGA/function-calling-conven=
+tions.html#BorlandFastThis" title=3D"Borland's FastThis calling conventions=
+">
+<h3 class=3D"ruled" id=3D"BorlandFastThis" style=3D"clear:right;">
+Borland's <code>FastThis</code> calling conventions
+</h3>
+
+<div class=3D"sidebar">
+<p>
+The Borland <code>FastThis</code> calling convention is specified with:
+</p>
+<ul>
+<li><p><strong>Borland C/C++ for DOS/Windows:</strong>
+<code>__fastthis</code> keyword
+</p>
+</li></ul>
+<p>
+This is the default calling convention for:
+</p>
+<ul>
+<li><p class=3D"compact">Borland C++ for DOS/Windows (32-bit compiler)</p>
+</li></ul>
+</div>
+
+<p>
+Borland's x86 <code>FastThis</code> calling convention (called the "Object
+Data" calling convention in version 3.1 of its DOS/Windows compiler) is a
+variant of its own <code>cdecl</code> calling convention, that places the
+implicit <code>this</code> pointer, passed as a hidden parameter in calls
+to non-static function members of classes, in a register instead of on the
+stack.
+</p>
+<p>
+Obviously enough, it only applies to the C++ compiler.  It is as follows:
+</p>
+<ul>
+<li><p>
+Arguments are pushed onto the call stack by the caller in right-to-left
+lexical order.
+</p>
+</li><li><p>
+Arguments of 8-bit integer type are promoted to 16-bit integers.
+In the cases of variable-argument functions where the
+type of the parameter is not specified, and of unprototyped functions,
+arguments of 32-bit floating point type are promoted to 64-bit floating
+point.
+</p>
+</li><li><p>
+The hidden <code>this</code> argument to non-static function members is
+passed in the <code>(E)SI</code> register (in near data models) or in the
+<code>DS:(E)SI</code> register pair (in far data models).
+</p>
+</li><li><p>
+The following processor registers are volatile:
+<code>(E)AX</code>
+<code>BX</code> (16-bit compiler only)
+<code>(E)CX</code>
+<code>(E)DX</code>
+<code>ST(0)</code>=96<code>ST(7)</code>
+<code>ES</code>
+</p>
+</li><li><p>
+The following processor registers are non-volatile:
+<code>EBX</code> (32-bit compiler only)
+<code>(E)SI</code>
+<code>(E)DI</code>
+<code>(E)BP</code>
+<code>(E)SP</code>
+<code>CS</code>
+<code>DS</code>
+<code>FS</code>
+<code>GS</code>
+</p>
+</li><li><p>
+The direction (<code>DF</code>) flag in the <code>(E)FLAGS</code> register
+must be set to zero on entry to and on exit from the function.
+</p>
+</li><li><p>
+The called function will exit with a simple <code>RET</code>
+instruction.  It is the caller's responsibility to pop the function
+arguments back off the call stack.
+</p>
+</li><li><p>
+8-bit integer, 16-bit integer, (in the 32-bit compiler) 32-bit integer,
+and near pointer return values will be stored by the called function in
+the <code>(E)AX</code> register.
+</p>
+</li><li><p>
+64-bit integer, (in the 16-bit compiler) 32-bit integer,
+and far pointer return values will be stored by the called function in the
+<code>(E)AX</code>/<code>(E)DX</code> register pair.
+</p>
+</li><li><p>
+The FPU registers are not used to return values.
+</p>
+</li><li><p>Return value mechanisms differ as Borland's <code>cdecl</code>
+calling convention differs between its 16-bit and 32-bit compilers:
+</p><ul>
+<li><p>Borland C++ for DOS/Windows (16-bit compiler):</p>
+<p>
+For return values of structure or class type, or of floating-point type,
+the called function is expected to allocate space for a value of that
+type, writing the return value to this address, and returning the address
+in the <code>(E)AX</code> register.
+</p>
+</li><li><p>Borland C++ for DOS/Windows (32-bit compiler):</p>
+<p>
+For return values of structure or class type that are "plain old data
+structures" 32 bits or smaller in size,
+the called function stores the structure/class value in the
+<code>EAX</code> register.
+</p>
+<p>
+For return values of structure or class type that are not "plain old data
+structures" or that are larger than 32 bits,
+the caller is expected to allocate space for a value of that type, passing
+a pointer to it as a hidden parameter, pushed onto the call stack after
+all other parameters.  The called function writes the return value to this
+address, and returns the address in the <code>EAX</code> register.
+</p>
+</li></ul>
+</li></ul>
+
+<hr>
+<link rel=3D"Author" href=3D"http://jdebp.info/author.html">
+<link rel=3D"Copyright" href=3D"http://jdebp.info/FGA/copyright.html">
+<font size=3D"-2">
+=A9 <a href=3D"http://jdebp.info/FGA/copyright.html">Copyright</a> 2010
+<a href=3D"http://jdebp.info/author.html">Jonathan de Boyne Pollard</a>.
+"Moral" rights asserted.
+<br>
+Permission is hereby granted to copy and to distribute this web page in its
+original, unmodified form as long as its last modification datestamp is pre=
+served.
+</font>
+
+
+</body></html>
+------MultipartBoundary--YIaMFhaOPWLGseTcODTKNn8P6RzIkp2Tznw48mtWwM----
+Content-Type: text/css
+Content-Transfer-Encoding: quoted-printable
+Content-Location: http://jdebp.info/FGA/fga.css
+
+@charset "windows-1252";
+
+div.sidebar { float: right; width: 30%; border: 4px ridge black; padding: 0=
+.2em; background-color: grey; color: white; }
+
+div.infobox { float: right; width: 20%; border: 4px ridge black; padding: 0=
+.2em; background-color: lime; color: black; }
+
+div.command-window { border: 4px ridge black; padding: 0.2em; color: white;=
+ background-color: black; }
+
+blockquote.standard-text { color: black; background-color: aqua; }
+
+blockquote.commentary { color: black; background-color: grey; }
+
+blockquote.config-file { color: black; background-color: khaki; }
+
+blockquote.script-file { padding: 0.2em; color: black; background-color: kh=
+aki; }
+
+blockquote.epigraph { color: black; background-color: khaki; }
+
+blockquote.halfwidth { width: 50%; margin: auto; }
+
+a.footnotelink { font-size: 50%; vertical-align: super; }
+
+h1.ruled { border-bottom: double grey; }
+
+h2.ruled { border-bottom: 1px solid grey; }
+
+h3.ruled { border-bottom: 1px dotted grey; }
+
+h2.clearright { clear: right; }
+
+table.sidebar { float: right; border: 4px ridge black; padding: 0.2em; marg=
+in: 0.5em; }
+
+table.grey caption { background-color: black; color: white; }
+
+table.grey th { background-color: grey; color: white; }
+
+th.grey { background-color: grey; color: white; }
+
+table.grey p.bottomright { background-color: grey; color: black; }
+
+td.absent { background-color: black; }
+
+td.halftone { color: grey; }
+
+td.center { text-align: center; }
+
+p.silver { background-color: silver; color: black; }
+
+p.compact { margin-top: 0px; margin-bottom: 0px; }
+
+p.bottomright { text-align: right; text-align-last: left; vertical-align: t=
+ext-bottom; }
+
+p.book { text-indent: 2em; }
+
+p.dropcap::first-line { text-indent: 1em; line-height: 1em; }
+
+p.dropcap::first-letter { font-size: 200%; }
+
+defn { font-style: italic; }
+
+span.kbd { border-radius: 4px; padding: 1px; }
+
+span.command-prompt { color: aqua; }
+
+span.kbd-white { border-radius: 4px; padding: 3px; border: 4px outset; line=
+-height: 2em; background-color: antiquewhite; }
+
+ul.compact li p { margin-top: 0px; margin-bottom: 0px; }
+
+ul.footnotes { font-size: smaller; }
+
+ul.footnotes li p { margin-top: 0px; margin-bottom: 0px; }
+
+ol.footnotes { font-size: smaller; }
+
+ol.footnotes li p { margin-top: 0px; margin-bottom: 0px; }
+------MultipartBoundary--YIaMFhaOPWLGseTcODTKNn8P6RzIkp2Tznw48mtWwM------

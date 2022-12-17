@@ -22,164 +22,193 @@
     </size_alignment_map>
   </data_organization>
   <global>
-    <range space="ram"/>
+    <range space="ram" />
   </global>
-  <stackpointer register="ESP" space="ram"/>
+  <stackpointer register="ESP" space="ram" />
   <returnaddress>
-    <varnode space="stack" offset="0" size="4"/>
+    <varnode space="stack" offset="0" size="4" />
   </returnaddress>
   <default_proto>
     <prototype name="__watcallRegister" extrapop="unknown" stackshift="4">
       <input>
         <pentry minsize="1" maxsize="4">
-          <register name="EAX"/>
+          <register name="EAX" />
         </pentry>
         <pentry minsize="1" maxsize="4">
-          <register name="EDX"/>
+          <register name="EDX" />
         </pentry>
         <pentry minsize="1" maxsize="4">
-          <register name="EBX"/>
+          <register name="EBX" />
         </pentry>
         <pentry minsize="1" maxsize="4">
-          <register name="ECX"/>
+          <register name="ECX" />
         </pentry>
         <pentry minsize="1" maxsize="500" align="4">
-          <addr offset="4" space="stack"/>
+          <addr offset="4" space="stack" />
         </pentry>
       </input>
       <output killedbycall="true">
         <pentry minsize="4" maxsize="10" metatype="float" extension="float">
-          <register name="ST0"/>
+          <register name="ST0" />
         </pentry>
         <pentry minsize="1" maxsize="4">
-          <register name="EAX"/>
+          <register name="EAX" />
+        </pentry>
+        <pentry minsize="5" maxsize="8">
+          <addr space="join" piece1="EDX" piece2="EAX" />
         </pentry>
       </output>
-      <killedbycall>
-        <register name="EAX"/>
-        <register name="ST0"/>
-      </killedbycall>
+      <killedbycall />
       <unaffected>
-        <register name="EDI"/>
-        <register name="ESP"/>
-        <register name="EBP"/>
-        <register name="ESI"/>
-        <register name="ECX"/>
-        <register name="EBX"/>
-        <register name="EDX"/>
+        <register name="EAX" />
+        <register name="EBX" />
+        <register name="ECX" />
+        <register name="EDX" />
+        <register name="ESI" />
+        <register name="EDI" />
+        <register name="EBP" />
+        <register name="ESP" />
+        <register name="CS" />
+        <register name="ST0" />
+        <register name="ST1" />
+        <register name="ST2" />
+        <register name="ST3" />
+        <register name="ST4" />
+        <register name="ST5" />
+        <register name="ST6" />
+        <register name="ST7" />
+        <register name="DS" />
+        <register name="ES" />
+        <register name="FS" />
+        <register name="GS" />
       </unaffected>
     </prototype>
   </default_proto>
   <prototype name="__watcallStack" extrapop="unknown" stackshift="4">
     <input>
       <pentry minsize="1" maxsize="500" align="4">
-        <addr offset="4" space="stack"/>
+        <addr offset="4" space="stack" />
       </pentry>
     </input>
     <output>
       <pentry minsize="4" maxsize="10" metatype="float" extension="float">
-        <register name="ST0"/>
+        <register name="ST0" />
       </pentry>
       <pentry minsize="1" maxsize="4">
-        <register name="EAX"/>
+        <register name="EAX" />
+      </pentry>
+      <pentry minsize="5" maxsize="8">
+        <addr space="join" piece1="EDX" piece2="EAX" />
       </pentry>
     </output>
     <unaffected>
-      <varnode space="ram" offset="0" size="4"/>
-      <register name="ESP"/>
-      <register name="EBP"/>
-      <register name="ESI"/>
-      <register name="EDI"/>
-      <register name="EBX"/>
-      <register name="DF"/>
+      <varnode space="ram" offset="0" size="4" />
+      <register name="EBX" />
+      <register name="ESI" />
+      <register name="EDI" />
+      <register name="EBP" />
+      <register name="ESP" />
+      <register name="CS" />
+      <register name="DS" />
+      <register name="ES" />
+      <register name="FS" />
+      <register name="GS" />
     </unaffected>
     <killedbycall>
-      <register name="ECX"/>
-      <register name="EDX"/>
-      <register name="EAX"/>
+      <register name="EAX" />
+      <register name="ECX" />
+      <register name="EDX" />
+      <register name="ST0" />
+      <register name="ST1" />
+      <register name="ST2" />
+      <register name="ST3" />
+      <register name="ST4" />
+      <register name="ST5" />
+      <register name="ST6" />
+      <register name="ST7" />
     </killedbycall>
   </prototype>
   <prototype name="__stdcall" extrapop="unknown" stackshift="4">
     <input>
       <pentry minsize="1" maxsize="500" align="4">
-        <addr offset="4" space="stack"/>
+        <addr offset="4" space="stack" />
       </pentry>
     </input>
     <output>
       <pentry minsize="4" maxsize="10" metatype="float" extension="float">
-        <register name="ST0"/>
+        <register name="ST0" />
       </pentry>
       <pentry minsize="1" maxsize="4">
-        <register name="EAX"/>
+        <register name="EAX" />
       </pentry>
     </output>
     <unaffected>
-      <varnode space="ram" offset="0" size="4"/>
-      <register name="ESP"/>
-      <register name="EBP"/>
-      <register name="ESI"/>
-      <register name="EDI"/>
-      <register name="EBX"/>
-      <register name="DF"/>
+      <varnode space="ram" offset="0" size="4" />
+      <register name="ESP" />
+      <register name="EBP" />
+      <register name="ESI" />
+      <register name="EDI" />
+      <register name="EBX" />
+      <register name="DF" />
     </unaffected>
     <killedbycall>
-      <register name="ECX"/>
-      <register name="EDX"/>
-      <register name="EAX"/>
+      <register name="ECX" />
+      <register name="EDX" />
+      <register name="EAX" />
     </killedbycall>
   </prototype>
   <prototype name="__cdecl" extrapop="4" stackshift="4">
     <input>
       <pentry minsize="1" maxsize="500" align="4">
-        <addr offset="4" space="stack"/>
+        <addr offset="4" space="stack" />
       </pentry>
     </input>
     <output killedbycall="true">
       <pentry minsize="1" maxsize="4">
-        <register name="EAX"/>
+        <register name="EAX" />
       </pentry>
     </output>
     <unaffected>
-      <varnode space="ram" offset="0" size="4"/>
-      <register name="ESP"/>
-      <register name="EBP"/>
-      <register name="ESI"/>
-      <register name="EDI"/>
-      <register name="EBX"/>
-      <register name="DF"/>
+      <varnode space="ram" offset="0" size="4" />
+      <register name="ESP" />
+      <register name="EBP" />
+      <register name="ESI" />
+      <register name="EDI" />
+      <register name="EBX" />
+      <register name="DF" />
     </unaffected>
     <killedbycall>
-      <register name="ECX"/>
-      <register name="EDX"/>
-      <register name="EAX"/>
+      <register name="ECX" />
+      <register name="EDX" />
+      <register name="EAX" />
     </killedbycall>
   </prototype>
   <prototype name="__syscall" extrapop="4" stackshift="4">
     <input>
       <pentry minsize="1" maxsize="500" align="4">
-        <addr offset="4" space="stack"/>
+        <addr offset="4" space="stack" />
       </pentry>
     </input>
     <output killedbycall="true">
       <pentry minsize="4" maxsize="10" metatype="float" extension="float">
-        <register name="ST0"/>
+        <register name="ST0" />
       </pentry>
       <pentry minsize="1" maxsize="4">
-        <register name="EAX"/>
+        <register name="EAX" />
       </pentry>
     </output>
     <unaffected>
-      <register name="EBX"/>
-      <register name="EBP"/>
-      <register name="EDI"/>
-      <register name="ESI"/>
-      <register name="ESP"/>
-      <register name="DF"/>
+      <register name="EBX" />
+      <register name="EBP" />
+      <register name="EDI" />
+      <register name="ESI" />
+      <register name="ESP" />
+      <register name="DF" />
     </unaffected>
     <killedbycall>
-      <register name="EAX"/>
-      <register name="ECX"/>
-      <register name="EDX"/>
+      <register name="EAX" />
+      <register name="ECX" />
+      <register name="EDX" />
     </killedbycall>
   </prototype>
 </compiler_spec>

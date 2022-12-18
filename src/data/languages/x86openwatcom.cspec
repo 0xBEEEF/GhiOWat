@@ -58,7 +58,6 @@
           <addr space="join" piece1="EDX" piece2="EAX" />
         </pentry>
       </output>
-      <killedbycall />
       <unaffected>
         <register name="EAX" />
         <register name="EBX" />

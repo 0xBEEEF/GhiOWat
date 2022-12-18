@@ -83,7 +83,7 @@
       </unaffected>
     </prototype>
   </default_proto>
-  <prototype name="__watcallStack" extrapop="unknown" stackshift="4">
+  <prototype name="__watcallStack" extrapop="4" stackshift="4">
     <input>
       <pentry minsize="1" maxsize="500" align="4">
         <addr offset="4" space="stack" />
@@ -113,19 +113,6 @@
       <register name="FS" />
       <register name="GS" />
     </unaffected>
-    <killedbycall>
-      <register name="EAX" />
-      <register name="ECX" />
-      <register name="EDX" />
-      <register name="ST0" />
-      <register name="ST1" />
-      <register name="ST2" />
-      <register name="ST3" />
-      <register name="ST4" />
-      <register name="ST5" />
-      <register name="ST6" />
-      <register name="ST7" />
-    </killedbycall>
   </prototype>
   <prototype name="__stdcall" extrapop="unknown" stackshift="4">
     <input>
